@@ -40,6 +40,7 @@ class DDPG_Agent(object):
         self.decay = config.decay
         self.max_speed = self.env.world.agents[0].max_speed
         self.log_interval = config.log_interval
+        self.lambda_coeff = config.lambda_coeff
 
         # actor and target actor
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
@@ -95,7 +96,7 @@ class DDPG_Agent(object):
         return action
 
 
-    def update_policy(self, epoch):
+    def update_policy(self, epoch, other_policies):
         if epoch <= self.warmup_episodes:
             return
 
@@ -132,10 +133,25 @@ class DDPG_Agent(object):
         critic_norm = torch.nn.utils.clip_grad_norm_(self.critic.parameters(), self.clip_norm)
         self.critic_opt.step()
 
-        # update actor
-        actor_loss = -self.critic(state_batch, self.actor(state_batch)).mean()
+        # standard policy gradient actor loss
+        new_actions = self.actor(state_batch)
+        actor_loss = -self.critic(state_batch, new_actions).mean()                                      
+
+        #  fairness loss: \Sum_j 1 - cos(\theta_i - \theta_j)
+        xs, ys = torch.split(new_actions, 1, dim=1)
+        thetas = torch.atan2(ys, xs)
+
+        diffs = []
+        for other in other_policies:
+            other_xs, other_ys = torch.split(other(state_batch), 1, dim=1)
+            other_thetas = torch.atan2(other_ys, other_xs)
+            diffs.append(1 - torch.cos(thetas - other_thetas))
+        fairness_loss = torch.cat(diffs).mean()
+
+        total_actor_loss = actor_loss + self.lambda_coeff * fairness_loss
+
         self.actor_opt.zero_grad()
-        actor_loss.backward()
+        total_actor_loss.backward()
         actor_norm = torch.nn.utils.clip_grad_norm_(self.actor.parameters(), self.clip_norm)
         self.actor_opt.step()
 
@@ -146,10 +162,14 @@ class DDPG_Agent(object):
         # book-keeping
         if epoch % self.log_interval == 0:
             self.writer.add_scalar('loss/agent{}_actor_loss'.format(self.index), actor_loss, epoch)
+            self.writer.add_scalar('loss/agent{}_fairness_loss'.format(self.index), fairness_loss, epoch)
+            self.writer.add_scalar('loss/agent{}_total_actor_loss'.format(self.index), total_actor_loss, epoch)
             self.writer.add_scalar('loss/agent{}_critic_loss'.format(self.index), critic_loss, epoch)
             self.writer.add_scalar('norm/agent{}_actor_norm'.format(self.index), actor_norm, epoch)
             self.writer.add_scalar('norm/agent{}_critic_norm'.format(self.index), critic_norm, epoch)
+
                                    
+
     def normalize_obs(self, x):                         
         obs_var = self.obs_rms.var
         obs_var = torch.clamp(obs_var, min=self.norm_obs_var_clip)
@@ -292,10 +312,10 @@ class DDPG_Runner():
 
                 if all(done_n) or step == self.n_steps:
                     done_n = [1 for _ in range(self.num_agents)]
-                    # for j in range(self.num_agents):
-                        # if info_n[j]['active'] and self.agents[j].learning_agent:
-                        #     # update buffer for each agent
-                        #     self.agents[j].replay_buffer.push(obs_n[j], act_n[j], reward_n[j], next_obs_n[j], done_n[j])
+                    for j in range(self.num_agents):
+                        if info_n[j]['active'] and self.agents[j].learning_agent:
+                            # update buffer for each agent
+                            self.agents[j].replay_buffer.push(obs_n[j], act_n[j], reward_n[j], next_obs_n[j], done_n[j])
 
                     # update success ratio
                     if step < self.n_steps:
@@ -308,10 +328,10 @@ class DDPG_Runner():
                         c = self.step_curriculum(epoch)
 
                     # checkpoints
-                    # if epoch > self.warmup_episodes and epoch % self.checkpoint_interval == 0:
-                    #     for k in range(self.num_agents):
-                    #         if self.agents[k].learning_agent:
-                    #             save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
+                    if epoch > self.warmup_episodes and epoch % self.checkpoint_interval == 0:
+                        for k in range(self.num_agents):
+                            if self.agents[k].learning_agent:
+                                save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
                     
                     # logging
                     if epoch % self.log_interval == 0:
@@ -326,13 +346,14 @@ class DDPG_Runner():
                 else:
                     # update buffer for each agent
                     done_n = [0 for _ in range(self.num_agents)]
-                    # for j in range(self.num_agents):
-                    #     if self.agents[j].learning_agent:
-                    #         if info_n[j]['active']:
-                    #             self.agents[j].replay_buffer.push(obs_n[j], act_n[j], reward_n[j], next_obs_n[j], done_n[j])
+                    for j in range(self.num_agents):
+                        if self.agents[j].learning_agent:
+                            if info_n[j]['active']:
+                                self.agents[j].replay_buffer.push(obs_n[j], act_n[j], reward_n[j], next_obs_n[j], done_n[j])
 
-                    #         if len(self.agents[j].replay_buffer) > self.agents[j].batch_size and train_steps % self.update_steps == 0:
-                    #             self.agents[j].update_policy(epoch)
+                            if len(self.agents[j].replay_buffer) > self.agents[j].batch_size and train_steps % self.update_steps == 0:
+                                other_policies = [ag.actor for i, ag in enumerate(self.agents) if i is not j and ag.learning_agent]
+                                self.agents[j].update_policy(epoch, other_policies)
 
                     # update observation                    
                     obs_n = next_obs_n
@@ -348,7 +369,7 @@ class DDPG_Runner():
         print('loading checkpoints for test!')
         for i, agent in enumerate(self.agents):
             if agent.learning_agent:
-                params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=110000)
+                params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
                 agent.load_params(params)
             
         # evaluate

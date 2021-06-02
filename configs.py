@@ -54,26 +54,46 @@ class BaseConfig(object):
         logger.info('\n'.join("%s: %s" % (item, getattr(self, item)) for item in attrs))
 
 
-class Config_DDPG_Speed(BaseConfig): 
-    algorithm = 'ddpg_speed'                    # algorithm name
+class Config_DDPG_Symmetric(BaseConfig):
+    algorithm = 'ddpg_symmetric'                # algorithm name
     pred_vel_start = 1.2                        # curriculum start value
-    pred_vel_end = 0.4                          # curriculum end value
-    decay = 120000                               # number of episodes over curriculum
-    pred_test_vel = 0.9                         # predator test speed
-    epsilon_start = 1.0                        # epsilon start for e-greedy policy
-    epsilon_end = 1.0                          # epsilon end for e-greedy policy
+    pred_vel_end = 1.2                          # curriculum end value
+    decay = 15000                               # number of episodes over curriculum
+    pred_test_vel = 1.1                         # predator test speed
+    epsilon_start = 0.95                        # epsilon start for e-greedy policy
+    epsilon_end = 0.05                          # epsilon end for e-greedy policy
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
 
     # inherited from other configs
-    use_sensor_range = False                     # predators have sensing range
+    use_sensor_range = True                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication
     comm_range = 0.75                           # communication range for perfect communication
-    comm_noise = 0.5                           # noise in communication channel
+    comm_noise = 0.5                            # noise in communication channel
     distance_start = 4.5                        # curriculum start value
     distance_end = 4.5                          # curriculum end value
     init_range_thresh = 1.0                     # percentage predators init outside sensing range
 
+class Config_DDPG_Speed_Fair(BaseConfig):
+    algorithm = 'ddpg_speed_fair'               # algorithm name
+    pred_vel_start = 1.2                        # curriculum start value
+    pred_vel_end = 1.2                          # curriculum end value
+    decay = 15000                               # number of episodes over curriculum
+    pred_test_vel = 0.9                         # predator test speed
+    epsilon_start = 0.95                        # epsilon start for e-greedy policy
+    epsilon_end = 0.05                          # epsilon end for e-greedy policy
+    test_prey = 'cosine'                        # bot policy to use for prey
+    test_predator = 'greedy'                    # bot policy to use for predators
+    lambda_coeff = 0.0                          # strength of fairness constraint
+
+    # inherited from other configs
+    use_sensor_range = False                    # predators have sensing range
+    comm_type = 'none'                          # predators have perfect communication
+    comm_range = 0.75                           # communication range for perfect communication
+    comm_noise = 0.5                            # noise in communication channel
+    distance_start = 4.5                        # curriculum start value
+    distance_end = 4.5                          # curriculum end value
+    init_range_thresh = 1.0                     # percentage predators init outside sensing range
 
 #--------------------------------------
 # Helper functions
@@ -91,10 +111,14 @@ def preprocess(args):
 
 
 def define_configs(args):
-    if args.algorithm == 'ddpg_speed':
-        config = Config_DDPG_Speed()
-        from algorithms import ddpg_speed
-        config.multiagent_fn = ddpg_speed.DDPG_Runner
+    if args.algorithm == 'ddpg_symmetric':
+        config = Config_DDPG_Symmetric()
+        from algorithms import ddpg_symmetric
+        config.multiagent_fn = ddpg_symmetric.DDPG_Runner
+    elif args.algorithm == 'ddpg_speed_fair':
+        config = Config_DDPG_Speed_Fair()
+        from algorithms import ddpg_speed_fair
+        config.multiagent_fn = ddpg_speed_fair.DDPG_Runner
     else:
         raise ValueError("Invalid choice of configuration")
 
@@ -123,7 +147,7 @@ def define_configs(args):
     else:
         config.normalize_env = False
 
-    particle_envs = ['simple_torus', 'simple_torus_blind']
+    particle_envs = ['simple_torus']
     if config.env in particle_envs:
         config.particle_env = True
     else:
