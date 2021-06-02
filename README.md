@@ -1,7 +1,7 @@
-# Curriculum-Driven Multi-Agent Learning and the Role of Implicit Communication in Teamwork
+# Fairness for Cooperative Multi-Agent Learning with Equivariant Policies
 
 <!-- This repository is the official implementation of [My Paper Title](https://arxiv.org/abs/2030.12345).  -->
-This repository is the official implementation of Curriculum-Driven Multi-Agent Learning and the Role of Implicit Communication in Teamwork.
+This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies.
 
 ## Setup
 Python 3.5.4 (anaconda environment recommended)
@@ -23,21 +23,22 @@ python baselines/baselines.py --mode test --render
 
 ## Training
 
-To train a CD-DDPG model, run:
+To train a Fair-E model, run:
 
 ```train
-python main.py --env simple_torus --algorithm ddpg_speed
+python main.py --env simple_torus --algorithm ddpg_symmetric
 ```
 
-To train a CD-DDPG (partial) model, run with the _simple_torus_blind_ environment:
+To train a Fair-ER model, run:
 
 ```train
-python main.py --env simple_torus_blind --algorithm ddpg_speed
+python main.py --env simple_torus --algorithm ddpg_speed_fair
 ```
+* The control parameter of fairness can be adjusted in _configs.py_.
 
-To resume training from a checkpoint, run: 
+To resume training from a checkpoint, run:
 ```
-python main.py --env simple_torus --algorithm ddpg_speed --checkpoint_path /path/to/model/checkpoints
+python main.py --env simple_torus --algorithm ddpg_symmetric --checkpoint_path /path/to/model/checkpoints
 ```
 
 ## Evaluation
@@ -52,6 +53,8 @@ python eval/collect_actions.py --env simple_torus --pred_policy greedy --prey_po
 python eval/collect_actions.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 75 --checkpoint_path /path/to/model/checkpoints
 ```
 
-
-
+To create fairness vs. utility plots, run:
+```eval
+python eval/fairness_vs_utility.py --fp /path/to/folder/of/results
+```
 
