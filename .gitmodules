@@ -1,0 +1,3 @@
+[submodule "simple_particle_envs"]
+	path = simple_particle_envs
+	url = https://github.com/ngrupen/multiagent-particle-envs.git
