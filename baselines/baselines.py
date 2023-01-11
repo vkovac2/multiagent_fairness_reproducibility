@@ -17,6 +17,7 @@ from multiagent.environment import MultiAgentEnv
 import multiagent.scenarios as scenarios
 
 
+
 class MultiAgent_Baseline():
     def __init__(self, env, config):
         # training properties
@@ -179,15 +180,16 @@ if __name__ == '__main__':
     parser.add_argument('--test_noise', type=float, default=0.5, help='test noise')
     parser.add_argument('--init_range_thresh', type=float, default=1.0, help='percentage predators init outside sensing range')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
+    parser.add_argument('--discrete', default=False)
+    
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 
     # np.random.seed(612)
     args.test_distance = args.distance_start = args.sensing_range
-
     # make env
     scenario = scenarios.load(args.env + '.py').Scenario()
-    world = scenario.make_world(args, discrete=False)
+    world = scenario.make_world(args)
     # create multi-agent env
     env = MultiAgentEnv(world, reset_callback=scenario.reset_world,
                             reward_callback=scenario.reward,
