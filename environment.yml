@@ -2,13 +2,13 @@ name: fact22
 channels:
   - defaults
 dependencies:
-  - certifi=2020.6.20=pyhd3eb1b0_3
-  - python=3.5.4=h1357f44_23
-  - setuptools=40.2.0=py35_0
-  - vc=14.2=h21ff451_1
-  - vs2015_runtime=14.27.29016=h5e58377_2
-  - wheel=0.37.1=pyhd3eb1b0_0
-  - wincertstore=0.2=py35hfebbdb8_0
+  - certifi=2020.6.20
+  - python=3.5.4
+  - setuptools=40.2.0
+  - vc=14.2
+  - vs2015_runtime=14.27.29016
+  - wheel=0.37.1
+  - wincertstore=0.2
   - pip:
     - chardet==4.0.0
     - cloudpickle==1.6.0
