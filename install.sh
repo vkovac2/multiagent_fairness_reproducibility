@@ -12,7 +12,7 @@ git clone --recurse-submodules https://github.com/gerardPlanella/multiagent_fair
 echo "----- Entering Repo -----"
 cd multiagent_fairness_reproducibility
 echo "----- Creating Conda Environment -----"
-conda create -n "fact22" python=3.5.2
+conda create -n "fact22" python=3.5.4
 echo "----- Activating Conda Environment -----"
 conda activate fact22
 echo "----- Installing PyTorch -----"
