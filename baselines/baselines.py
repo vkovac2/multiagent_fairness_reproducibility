@@ -180,7 +180,15 @@ if __name__ == '__main__':
     parser.add_argument('--test_noise', type=float, default=0.5, help='test noise')
     parser.add_argument('--init_range_thresh', type=float, default=1.0, help='percentage predators init outside sensing range')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
-    parser.add_argument('--discrete', default=False)
+    # Added arguments
+    parser.add_argument('--world_size', default = 10, type = int, help = 'size of the world')
+    parser.add_argument('--symmetric', default = False, type = bool)
+    parser.add_argument('--pred_colors', default = "regular", type = str, help = "colour of the predator")
+    parser.add_argument('--n_preds', default = 3, type = int, help = "number of predators")
+    parser.add_argument('--pred_vel', default = 1.0, type = float, help = "preditor velocity")
+    parser.add_argument('--prey_vel', default = 1.0, type = float, help = "prey velocity")
+    parser.add_argument('--discrete', default=False, type = bool)
+    parser.add_argument('--rew_shape', default = 0, type = int, help = "world shape")
     
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
