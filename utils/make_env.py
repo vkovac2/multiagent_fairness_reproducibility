@@ -11,11 +11,15 @@ Functions to facilitate environment creation. Currently only supports paralleliz
 def make_env(config):
     # make env
     if config.normalize_env:
+        #environment where the observations and actions 
+        #are transformed to have zero mean and unit variance.
         env = NormalizedEnv(gym.make(config.env))
     elif config.n_threads is not None:
+
         print('making parallel env')
         env = make_parallel_env(config)
     elif config.particle_env:
+        ##vanilla main goes there 
         print('making particle env')
         env = make_particle_env(config)
     else:
@@ -46,7 +50,7 @@ def make_particle_env(config):
     # load scenario from script
     scenario = scenarios.load(config.env + ".py").Scenario()
     # create world
-    world = scenario.make_world(config, discrete=config.discrete)
+    world = scenario.make_world(config)
     # create multiagent environment
     env = MultiAgentEnv(world, reset_callback=scenario.reset_world,
                                 reward_callback=scenario.reward,
