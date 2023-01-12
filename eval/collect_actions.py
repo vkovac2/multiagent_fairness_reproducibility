@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from algorithms.algo_utils import *
 from baselines.bot_policies import *
-from configs import Config_DDPG_Speed
+from configs import Config_DDPG_Speed_Fair
 
 class Trajectory_Collector():
     def __init__(self, env, config):
@@ -45,7 +45,7 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            from algorithms.ddpg_speed import DDPG_Agent
+            from algorithms.ddpg_speed_fair import DDPG_Agent
             self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
             if self.checkpoint_path:
                 print('loading warm-up model!')
@@ -158,10 +158,20 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.set_defaults(verbose=False)
+
+    parser.add_argument('--world_size', default = 10, type = int, help = 'size of the world')
+    parser.add_argument('--symmetric', default = False, type = bool)
+    parser.add_argument('--pred_colors', default = "regular", type = str, help = "colour of the predator")
+    parser.add_argument('--n_preds', default = 3, type = int, help = "number of predators")
+    parser.add_argument('--prey_vel', default = 1.0, type = float, help = "prey velocity")
+    parser.add_argument('--discrete', default=False, type = bool)
+    parser.add_argument('--rew_shape', default = 0, type = int, help = "world shape")
+    parser.add_argument('--collaborative', type = bool, default = False)
+
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    config = Config_DDPG_Speed()
+    config = Config_DDPG_Speed_Fair()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy
@@ -171,8 +181,17 @@ if __name__ == '__main__':
     config.directory = args.directory
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
+    config.discrete = args.discrete
     # config.mode = 'train'
     config.render = args.render
+    config.world_size = args.world_size
+    config.symmetric = args.symmetric
+    config.rew_shape = args.rew_shape
+    config.pred_colors = args.pred_colors
+    config.n_preds = args.n_preds
+    config.prey_vel = args.prey_vel
+    config.collaborative = args.collaborative
+    
 
     comm_envs = []
     if config.env in comm_envs:
@@ -182,7 +201,7 @@ if __name__ == '__main__':
 
     # make env
     scenario = scenarios.load(config.env + '.py').Scenario()
-    world = scenario.make_world(config, discrete=False)
+    world = scenario.make_world(config)
     # create multi-agent env
     env = MultiAgentEnv(world, reset_callback=scenario.reset_world,
                             reward_callback=scenario.reward,
@@ -190,6 +209,7 @@ if __name__ == '__main__':
                             info_callback=scenario.benchmark_data,
                             done_callback=scenario.terminal)
 
+    env.env_key = ""
 
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
