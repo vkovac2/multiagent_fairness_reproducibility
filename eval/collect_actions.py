@@ -45,7 +45,7 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            from algorithms.ddpg_speed import DDPG_Agent
+            from algorithms.ddpg_speed_fair import DDPG_Agent
             self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
             if self.checkpoint_path:
                 print('loading warm-up model!')
