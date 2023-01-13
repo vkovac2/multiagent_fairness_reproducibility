@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from algorithms.algo_utils import *
 from baselines.bot_policies import *
-from configs import Config_DDPG_Speed_Fair
+from configs import Config_DDPG_Speed_Fair, Config_DDPG_Symmetric
 
 class Trajectory_Collector():
     def __init__(self, env, config):
@@ -45,16 +45,22 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            from algorithms.ddpg_speed_fair import DDPG_Agent
-            self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            # from algorithms.ddpg_speed_fair import DDPG_Agent
+            from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
+            # self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+
             if self.checkpoint_path:
                 print('loading warm-up model!')
                 # init predators from checkpoint
                 for i, a in enumerate(self.predators):
                     if self.config.checkpoint_epoch:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
+                        print(params.keys())
                     else:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
+                        print(params.keys())
+                        print()
                     self.predators[i].load_params(params)
             else:
                 raise ValueError('Path to checkpoint must be provided to test policy!')
@@ -161,7 +167,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    config = Config_DDPG_Speed_Fair()
+    from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
+    config = Config_DDPG_Symmetric()
+    # config = Config_DDPG_Speed_Fair()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy
