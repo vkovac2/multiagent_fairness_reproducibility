@@ -1,0 +1,5 @@
+[submodule "simple_particle_envs"]
+	path = simple_particle_envs
+	url = https://github.com/gerardPlanella/multiagent-particle-envs.git
+	branch = main
+	update = merge
