@@ -18,7 +18,7 @@ pip install -e .
 
 To verify installation, run:
 ```
-python baselines/baselines.py --mode test --render
+xvfb-run -a python baselines/baselines.py --mode test --render
 ```
 
 ## Training
