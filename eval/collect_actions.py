@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from algorithms.algo_utils import *
 from baselines.bot_policies import *
-from configs import Config_DDPG_Speed
+from configs import Config_DDPG_Speed_Fair
 
 class Trajectory_Collector():
     def __init__(self, env, config):
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    config = Config_DDPG_Speed()
+    config = Config_DDPG_Speed_Fair()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy
