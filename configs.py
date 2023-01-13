@@ -28,7 +28,7 @@ class BaseConfig(object):
     critic_hidden = [128, 128, 128]             # critic hidden units (value function)
     actor_lr = 0.0001                           # actor learning rate
     critic_lr = 0.001                           # critic learning rate
-    n_epochs = 125000                            # number of training epochs
+    n_epochs = 20                          # number of training epochs
     update_steps = 5                            # number of steps between policy updates
     batch_size = 512                            # batch size
     buffer_length = 500000                      # replay buffer length
@@ -37,16 +37,15 @@ class BaseConfig(object):
     use_curriculum = True                       # curriculum learning flag
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
-    warmup_episodes = 1000                      # number of experience episodes before training begins
-    checkpoint_interval = 5000                  # episodes between model checkpoints
+    warmup_episodes = 1                       # number of experience episodes before training begins
+    checkpoint_interval = 5               # episodes between model checkpoints
 
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
 
     ######## book-keeping ########
     log_interval = 50                           # episodes between log updates
-    checkpoint_interval = 1000                  # episodes between model checkpoints
-    checkpoint_path = None                      # path for loading model checkpoints
+    checkpoint_path = None                     # path for loading model checkpoints
     scripts = ['main.py', 'configs.py']
 
     def show(self):

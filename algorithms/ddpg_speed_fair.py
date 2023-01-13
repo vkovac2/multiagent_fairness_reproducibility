@@ -196,7 +196,7 @@ class DDPG_Agent(object):
     def load_params(self, params):
         print('loading params for agent {}!'.format(self.index))
         self.actor.load_state_dict(params['actor'])
-        self.critic.load_state_dict(params['critic'])
+        # self.critic.load_state_dict(params['critic'])
         self.actor_target.load_state_dict(params['actor_target'])
         self.critic_target.load_state_dict(params['critic_target'])
         self.actor_opt.load_state_dict(params['actor_opt'])
@@ -332,7 +332,7 @@ class DDPG_Runner():
                         for k in range(self.num_agents):
                             if self.agents[k].learning_agent:
                                 save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
-                    
+                                print(self.agents[k].get_params().keys())
                     # logging
                     if epoch % self.log_interval == 0:
                         self.writer.add_scalar('epoch/steps', step, epoch)

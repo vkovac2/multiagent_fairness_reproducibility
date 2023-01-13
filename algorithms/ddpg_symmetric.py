@@ -208,9 +208,18 @@ class Copy_DDPG_Agent(object):
 
         # init actor
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
-
+        self.actor_target = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
+        
+        # critic and target critic
+        self.critic = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
+        self.critic_target = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
         # copy params from reference actor
-        param_update_hard(self.actor, self.reference.actor)
+        param_update_hard(self.actor_target, self.actor)
+        param_update_hard(self.critic_target, self.critic)
+
+        # optimizers
+        self.actor_opt = optim.Adam(self.actor.parameters(), lr=config.actor_lr)
+        self.critic_opt = optim.Adam(self.critic.parameters(), lr=config.critic_lr)
 
         # running stats, replay buffer and random process
         if self.normalize:
@@ -269,6 +278,11 @@ class Copy_DDPG_Agent(object):
     def get_params(self):
         return {
             'actor' : self.actor.state_dict(),
+            'critic' : self.critic.state_dict(),
+            'actor_target' : self.actor_target.state_dict(),
+            'critic_target' : self.critic_target.state_dict(),
+            'actor_opt' : self.actor_opt.state_dict(),
+            'critic_opt' : self.critic_opt.state_dict()
         }
 
     def load_params(self, params):
@@ -318,9 +332,12 @@ class DDPG_Runner():
         # init predators -- forced symmetric agents
         sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
         self.predators = [sym_pred]
+        print(self.predators[0].get_params().keys())
+
         for i in range(self.env.num_preds - 1):
             self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
         self.num_preds = len(self.predators)
+        print(self.predators[1].get_params().keys())
 
         if config.mode is 'train' and self.checkpoint_path:
             print('loading warm-up model!')
@@ -333,6 +350,9 @@ class DDPG_Runner():
         self.prey = [decentralized_prey(env, i+len(self.predators), config.test_prey, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
         self.agents = self.predators + self.prey
+        print(self.agents[1].get_params().keys())
+
+        
         self.is_training = True
 
         # set start speed
@@ -411,7 +431,6 @@ class DDPG_Runner():
                         for k in range(self.num_agents):
                             if self.agents[k].learning_agent:
                                 save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
-                    
                     # logging
                     if epoch % self.log_interval == 0:
                         self.writer.add_scalar('epoch/steps', step, epoch)
