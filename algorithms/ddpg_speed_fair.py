@@ -109,9 +109,9 @@ class DDPG_Agent(object):
             state_batch = torch.FloatTensor(np.array(state_batch)).to(device)
             next_state_batch = torch.FloatTensor(np.array(next_state_batch)).to(device)
 
-        action_batch = torch.FloatTensor(action_batch).to(device)
-        reward_batch = torch.FloatTensor(reward_batch).to(device)
-        done_batch = torch.FloatTensor(done_batch).to(device)
+        action_batch = torch.FloatTensor(np.array(action_batch)).to(device)
+        reward_batch = torch.FloatTensor(np.array(reward_batch)).to(device)
+        done_batch = torch.FloatTensor(np.array(done_batch)).to(device)
    
         # Q(s, a)
         curr_Q = self.critic(state_batch, action_batch)
