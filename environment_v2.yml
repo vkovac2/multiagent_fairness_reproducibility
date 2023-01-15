@@ -39,7 +39,6 @@ dependencies:
   - grpcio=1.42.0
   - gst-plugins-base=1.18.5
   - gstreamer=1.18.5
-  - icc_rt=2022.1.0
   - icu=58.2
   - idna=3.4
   - intel-openmp=2021.4.0
@@ -124,8 +123,6 @@ dependencies:
   - typing_extensions=4.4.0
   - tzdata=2022g
   - urllib3=1.26.13
-  - vc=14.2
-  - vs2015_runtime=14.27.29016
   - werkzeug=2.2.2
   - wheel=0.37.1
   - win_inet_pton=1.1.0
