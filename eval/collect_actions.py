@@ -96,6 +96,10 @@ class Trajectory_Collector():
             'positions' : []
         }
         successes = 0
+
+        print("Using torch version: {}".format(torch.__version__))
+        print('{} GPUs'.format(torch.cuda.device_count()))
+
         for epoch in tqdm(range(1, self.n_epochs+1)):
             # to record rollout
             if self.render:
