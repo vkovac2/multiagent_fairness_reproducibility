@@ -16,4 +16,4 @@ module load Anaconda3/2021.05
 cd $HOME/repos/multiagent_fairness_reproducibility
 #xvfb-run -a python baselines/baselines.py --mode test --render
 xvfb-run -a python eval/collect_actions.py --env simple_torus --pred_policy greedy --prey_policy random --seed 75  
-#python main.py --env simple_torus --algorithm ddpg_symmetric
+python main.py --env simple_torus --algorithm ddpg_speed_fair --collaborative True
