@@ -160,6 +160,7 @@ def define_configs(args):
 
     print("Using torch version: {}".format(torch.__version__))
     print('{} GPUs'.format(torch.cuda.device_count()))
+    
 
     return config
 
