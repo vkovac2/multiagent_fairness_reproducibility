@@ -52,9 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_interval', type=int, default=None, help='training logs update interval')
     parser.add_argument('--n_threads', type=int, default=None, help='number of threads for trajectory rollouts')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
-    parser.add_argument('--collaborative' type=bool, default = False)
-
-
+    parser.add_argument('--collaborative', type=bool, default = True)
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 

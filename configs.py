@@ -58,7 +58,7 @@ class Config_DDPG_Symmetric(BaseConfig):
     pred_vel_start = 1.2                        # curriculum start value
     pred_vel_end = 1.2                          # curriculum end value
     decay = 15000                               # number of episodes over curriculum
-    pred_test_vel = 1.1                         # predator test speed
+    pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
     epsilon_end = 0.05                          # epsilon end for e-greedy policy
     test_prey = 'cosine'                        # bot policy to use for prey
