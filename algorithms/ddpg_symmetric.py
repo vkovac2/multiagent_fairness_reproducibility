@@ -104,8 +104,8 @@ class Symmetric_DDPG_Agent(object):
             state_batch = self.normalize_obs(torch.FloatTensor(state_batch).to(device))
             next_state_batch = self.normalize_obs(torch.FloatTensor(next_state_batch).to(device))
         else:
-            state_batch = torch.FloatTensor(state_batch).to(device)
-            next_state_batch = torch.FloatTensor(next_state_batch).to(device)
+            state_batch = torch.FloatTensor(numpy.array(state_batch)).to(device)
+            next_state_batch = torch.FloatTensor(numpy.array(next_state_batch)).to(device)
 
         action_batch = torch.FloatTensor(action_batch).to(device)
         reward_batch = torch.FloatTensor(reward_batch).to(device)

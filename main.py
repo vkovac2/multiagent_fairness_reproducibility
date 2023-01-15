@@ -54,6 +54,8 @@ if __name__ == '__main__':
     parser.add_argument('--n_threads', type=int, default=None, help='number of threads for trajectory rollouts')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = False)
+    parser.add_argument('--world_size', type=float, default = 6.0)
+    
 
 
     parser.set_defaults(verbose=False)
