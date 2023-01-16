@@ -104,12 +104,12 @@ class Symmetric_DDPG_Agent(object):
             state_batch = self.normalize_obs(torch.FloatTensor(state_batch).to(device))
             next_state_batch = self.normalize_obs(torch.FloatTensor(next_state_batch).to(device))
         else:
-            state_batch = torch.FloatTensor(numpy.array(state_batch)).to(device)
-            next_state_batch = torch.FloatTensor(numpy.array(next_state_batch)).to(device)
+            state_batch = torch.FloatTensor(np.array(state_batch)).to(device)
+            next_state_batch = torch.FloatTensor(np.array(next_state_batch)).to(device)
 
-        action_batch = torch.FloatTensor(action_batch).to(device)
-        reward_batch = torch.FloatTensor(reward_batch).to(device)
-        done_batch = torch.FloatTensor(done_batch).to(device)
+        action_batch = torch.FloatTensor(np.array(action_batch)).to(device)
+        reward_batch = torch.FloatTensor(np.array(reward_batch)).to(device)
+        done_batch = torch.FloatTensor(np.array(done_batch)).to(device)
    
         # Q(s, a)
         curr_Q = self.critic(state_batch, action_batch)
@@ -310,6 +310,7 @@ class DDPG_Runner():
         self.pred_vel_end = config.pred_vel_end
         self.decay = config.decay
         self.pred_test_vel = config.pred_test_vel
+        self.equivariant = config.equivariant
 
         print('curriculum = {}'.format(self.use_curriculum))
 
@@ -329,13 +330,21 @@ class DDPG_Runner():
         self.writer = SummaryWriter(log_dir=os.path.join('/'.join(split_dir[:-1]), 
                                 'runs', split_dir[-1]))
 
-        # init predators -- forced symmetric agents
-        sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
-        self.predators = [sym_pred]
-        print(self.predators[0].get_params().keys())
+        # init predators
+        if(self.equivariant):
+            sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
+            self.predators = [sym_pred]
+            print(self.predators[0].get_params().keys())
+            
+            for i in range(self.env.num_preds - 1):
+                self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
+        else:
+            self.predators = []
+            for i in range(self.env.num_preds):
+                sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=i)
+                self.predators.append(sym_pred)
 
-        for i in range(self.env.num_preds - 1):
-            self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
+
         self.num_preds = len(self.predators)
         print(self.predators[1].get_params().keys())
 
@@ -389,6 +398,7 @@ class DDPG_Runner():
         train_steps = 0
         total_caps = 0
         successes = 0
+        s_ratio = 0
 
         for epoch in tqdm(range(1, self.n_epochs+1)):
             rewards = [0.0 for _ in range(self.num_agents)]
@@ -463,6 +473,7 @@ class DDPG_Runner():
                     obs_n = next_obs_n
 
         self.env.close()
+        return s_ratio
 
 
     def test(self, render=True):

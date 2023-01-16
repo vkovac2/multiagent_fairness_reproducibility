@@ -252,7 +252,7 @@ def main(config):
                                     # compute reward vector
                                     pred_pos = trajectories['positions'][i][key][-1]
                                     prey_pos = trajectories['positions'][i]['prey'][-1]
-                                    dist = toroidal_distance(pred_pos, prey_pos, 6.0)
+                                    dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
                                     if dist < PRED_SIZE + PREY_SIZE:
                                         reward_vec[j] = 1
 
