@@ -360,6 +360,7 @@ class DDPG_Runner():
 
         print('success ratio = {}'.format(s_ratio))
         self.env.close()
+        return s_ratio
 
 
     def test(self, render=True):

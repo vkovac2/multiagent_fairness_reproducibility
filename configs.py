@@ -28,7 +28,7 @@ class BaseConfig(object):
     critic_hidden = [128, 128, 128]             # critic hidden units (value function)
     actor_lr = 0.0001                           # actor learning rate
     critic_lr = 0.001                           # critic learning rate
-    n_epochs = 10000                          # number of training epochs
+    n_epochs = 1000                          # number of training epochs
     update_steps = 5                            # number of steps between policy updates
     batch_size = 512                            # batch size
     buffer_length = 500000                      # replay buffer length
@@ -38,7 +38,7 @@ class BaseConfig(object):
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
     warmup_episodes = 1                       # number of experience episodes before training begins
-    checkpoint_interval = 1000               # episodes between model checkpoints
+    checkpoint_interval = 100               # episodes between model checkpoints
 
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
@@ -55,7 +55,7 @@ class BaseConfig(object):
 
 class Config_DDPG_Symmetric(BaseConfig):
     algorithm = 'ddpg_symmetric'                # algorithm name
-    pred_vel_start = 1.2                        # curriculum start value
+    pred_vel_start = 0.4                       # curriculum start value
     pred_vel_end = 1.2                          # curriculum end value
     decay = 15000                               # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
@@ -75,7 +75,7 @@ class Config_DDPG_Symmetric(BaseConfig):
 
 class Config_DDPG_Speed_Fair(BaseConfig):
     algorithm = 'ddpg_speed_fair'               # algorithm name
-    pred_vel_start = 1.2                        # curriculum start value
+    pred_vel_start = 0.4                        # curriculum start value
     pred_vel_end = 1.2                          # curriculum end value
     decay = 15000                               # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed

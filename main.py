@@ -24,7 +24,8 @@ def main(args):
     runner = config.multiagent_fn(env, config)
 
     if config.mode == 'train':
-        runner.train()
+        #TODO: Save this
+        success_ratio = runner.train()
     else:
         if config.checkpoint_path is not None:
             runner.test()
@@ -55,7 +56,10 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', dest='verbose', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = False)
     parser.add_argument('--world_size', type=float, default = 6.0)
-    
+    parser.add_argument('--lambda_coeff', type=float, default = 0)
+    parser.add_argument('--decay', type=int, default=15000)
+    parser.add_argument('--equivariant', type=bool, default=True)
+    parser.add_argument('--test_predator', type=str, default="greedy")
 
 
     parser.set_defaults(verbose=False)
