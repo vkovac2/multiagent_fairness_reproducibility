@@ -28,7 +28,7 @@ class BaseConfig(object):
     critic_hidden = [128, 128, 128]             # critic hidden units (value function)
     actor_lr = 0.0001                           # actor learning rate
     critic_lr = 0.001                           # critic learning rate
-    n_epochs = 1000                          # number of training epochs
+    n_epochs = 42000                          # number of training epochs
     update_steps = 5                            # number of steps between policy updates
     batch_size = 512                            # batch size
     buffer_length = 500000                      # replay buffer length
@@ -37,8 +37,8 @@ class BaseConfig(object):
     use_curriculum = True                       # curriculum learning flag
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
-    warmup_episodes = 1                       # number of experience episodes before training begins
-    checkpoint_interval = 100               # episodes between model checkpoints
+    warmup_episodes = 333                       # number of experience episodes before training begins
+    checkpoint_interval = 2000               # episodes between model checkpoints
 
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
@@ -55,9 +55,9 @@ class BaseConfig(object):
 
 class Config_DDPG_Symmetric(BaseConfig):
     algorithm = 'ddpg_symmetric'                # algorithm name
-    pred_vel_start = 0.4                       # curriculum start value
+    pred_vel_start = 0.5                       # curriculum start value
     pred_vel_end = 1.2                          # curriculum end value
-    decay = 15000                               # number of episodes over curriculum
+    decay = 5000                           # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
     epsilon_end = 0.05                          # epsilon end for e-greedy policy
@@ -69,15 +69,15 @@ class Config_DDPG_Symmetric(BaseConfig):
     comm_type = 'none'                          # predators have perfect communication
     comm_range = 0.75                           # communication range for perfect communication
     comm_noise = 0.5                            # noise in communication channel
-    distance_start = 4.5                        # curriculum start value
-    distance_end = 4.5                          # curriculum end value
+    distance_start = 1.5                        # curriculum start value
+    distance_end = 1.5                          # curriculum end value
     init_range_thresh = 1.0                     # percentage predators init outside sensing range
 
 class Config_DDPG_Speed_Fair(BaseConfig):
     algorithm = 'ddpg_speed_fair'               # algorithm name
-    pred_vel_start = 0.4                        # curriculum start value
+    pred_vel_start = 0.5                        # curriculum start value
     pred_vel_end = 1.2                          # curriculum end value
-    decay = 15000                               # number of episodes over curriculum
+    decay = 5000                               # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
     epsilon_end = 0.05                          # epsilon end for e-greedy policy
@@ -90,8 +90,8 @@ class Config_DDPG_Speed_Fair(BaseConfig):
     comm_type = 'none'                          # predators have perfect communication
     comm_range = 0.75                           # communication range for perfect communication
     comm_noise = 0.5                            # noise in communication channel
-    distance_start = 4.5                        # curriculum start value
-    distance_end = 4.5                          # curriculum end value
+    distance_start = 1.5                        # curriculum start value
+    distance_end = 1.5                          # curriculum end value
     init_range_thresh = 1.0                     # percentage predators init outside sensing range
 
 #--------------------------------------
