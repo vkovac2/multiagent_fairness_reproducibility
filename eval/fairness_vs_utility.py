@@ -145,9 +145,9 @@ def plot_bars(measures, bounds=None, labels=None, name=None, center_spines=False
 
     plt.tight_layout()
     if name:
-        plt.savefig('/Users/nikogrupen/Desktop/{}.png'.format(name))
+        plt.savefig('{}.png'.format(name))
     else:
-        plt.savefig('/Users/nikogrupen/Desktop/figure.png')
+        plt.savefig('figure.png')
 
 
 '''
@@ -223,14 +223,18 @@ def main(config):
         for strat in sorted(strategies):
             if os.path.isdir(os.path.join(config.fp, strat)) and strat not in INVALID_STRATS:
                 # path = os.path.join(config.fp, strat, 'vel_{}'.format(vel), 'trajectories.pkl')
-                seed_path = os.path.join(config.fp, strat, 'v1', 'plot_data', 'trajectories')
+                # seed_path = os.path.join(config.fp, strat, 'v1', 'plot_data', 'trajectories')
+                seed_path = os.path.join(config.fp, "stored_trajectories")
                 seeds = os.listdir(seed_path)
 
                 rewards, caps, mis = [], [], []
                 for seed in seeds:
                     if os.path.isdir(os.path.join(seed_path, seed)):
+                        print(os.path.join(seed_path, seed))
                         print(strat, 'vel_{}'.format(vel), seed)
-                        path = os.path.join(seed_path, seed, 'vel_{}'.format(vel), 'trajectories.pkl')
+                        # path = os.path.join(seed_path, seed, 'vel_{}'.format(vel), 'trajectories.pkl')
+                        path = os.path.join(seed_path, seed,  'trajectories.pkl')
+                        
                         file = open(path, "rb")
                         trajectories = pickle.load(file)
                         file.close()
@@ -300,13 +304,111 @@ def main(config):
                     'info' : mis
                 }
 
+                
+
             # store results for strategy
             plot_data[vel] = vel_results
+    
+
+
+    #PLOT1
+    import random
+    fig = plt.figure()
+    x_pos = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
+    x_pos.reverse()
+    individual = [random.random() for x in x_pos]
+    shared = [x+0.2 for x in individual]
+    bar_width = 0.04
+    
+    plt.bar(x_pos, individual, bar_width, color='b')
+    plt.bar([x + bar_width for x in x_pos], shared, bar_width, color='r')
+    plt.xticks([x + bar_width/2 for x in x_pos], sorted(x_pos) )
+    plt.xlabel('Pursuer Velocity')
+    plt.ylabel('Capture USccess %')
+    plt.title('Mutual vs Individual Reward (Capture Success)')
+    plt.savefig('success_vs_velocity.png')
+    
+    #-----------------------
+
+    # print(results['reward_vectors'])
+    # print(results['reward_sums'])
+    
+    
+    
+    #PLOT2
+    fig = plt.figure()
+    x_pos = [i for i in range(8)]
+    vals = [results['reward_vectors'].count(i) / len(results['reward_vectors']) for i in range(8)]
+    bar_width = 0.4
+
+    
+    plt.bar(x_pos, vals, bar_width, color='g')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('No Equivariance')
+    plt.savefig('individual_distr.png')
+    # #-----------------------
+
+    #PLOT3
+    fig = plt.figure()
+    x_pos = [i for i in range(8)]
+    vals = [results['reward_sums'].count(i) / len(results['reward_sums']) for i in range(8)]
+    bar_width = 0.4
+
+    
+    plt.bar(x_pos, vals, bar_width, color='b')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('Fair-E')
+    plt.savefig('shared_distr.png')
+    # #-----------------------
+
+
+
+    algs = {} 
+    print(plot_data.keys())
+    for key in plot_data[1.0].keys():
+        algs[key] = {
+            'reward' : [],
+            'capture_success' : [],
+            'info' : []
+        }
+
+    for key in sorted(plot_data.keys()):
+        for alg in plot_data[key].keys():
+            algs[alg]['reward'].append(random.random())
+            algs[alg]['capture_success'].append(random.random())
+            algs[alg]['info'].append(random.random())
+            # algs[alg]['reward'].append(plot_data[key][alg]['reward'])
+            # algs[alg]['capture_success'].append(plot_data[key][alg]['capture_success'])
+            # algs[alg]['info'].append(plot_data[key][alg]['info'])
+
+    #PLOT4
+    fig = plt.figure()
+    x_pos = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2]
+    x_pos.reverse()
+
+    import itertools
+    marker = itertools.cycle((',', '+', '.', 'o', '*')) 
+
+    
+    for key in algs.keys():
+        plt.plot(x_pos, algs[key]['info'], ls='--', marker=next(marker))
+
+    plt.xlabel('Pursuer Velocity')
+    plt.ylabel('I(R,Z)')
+    plt.title('Team Fairness')
+    plt.savefig('fairness.png')
+
+    return
 
     # plot utility vs. lambda
     print('plotting...')
+    print(plot_data.keys())
     for key in sorted(plot_data.keys()):
         # xs = [float(x.split('_')[-1]) for x in sorted(plot_data[key].keys())]
+
+        print(plot_data[key].keys())
 
         # plot reward
         reward_ys = [np.mean(plot_data[key][y]['reward']) for y in sorted(plot_data[key].keys())]
@@ -321,10 +423,26 @@ def main(config):
         success_ys = [np.mean(plot_data[key][y]['capture_success']) for y in sorted(plot_data[key].keys())]
         success_y_errs = [np.std(plot_data[key][y]['capture_success']) for y in sorted(plot_data[key].keys())]
 
-        # fig = plt.figure()
-        # plt.plot(xs, success_ys, linewidth=3)
+        peos = [1,2,3,4,5]
+
+        fig = plt.figure()
+        # plt.plot(peos, success_ys, linewidth=3)
         # plt.ylim(0.0, 1.1)
-        # plt.savefig('/Users/nikogrupen/Desktop/{}_success_vs_lambda.png'.format(key))
+        
+        x_pos = [0, 1, 2, 3, 4, 5, 6, 7]
+        bar_width = 0.04
+
+        print(sorted(plot_data.keys()))
+        print(success_ys)
+        print(success_y_errs)
+        
+        plt.bar(sorted(plot_data.keys()), success_ys, bar_width, color='b')
+        plt.bar([x + bar_width for x in sorted(plot_data.keys())], success_y_errs, bar_width, color='r')
+        plt.xticks([x + bar_width/2 for x in x_pos], sorted(plot_data.keys()) )
+        plt.xlabel('Number')
+        plt.ylabel('Value')
+        plt.title('Two Bars Side by Side')
+        plt.savefig('{}_success_vs_lambda.png'.format(key))
 
         # plot MI
         info_ys = [np.mean(plot_data[key][y]['info']) for y in sorted(plot_data[key].keys())]
@@ -332,6 +450,9 @@ def main(config):
         # plt.plot(xs, info_ys, linewidth=3)
         # plt.ylim(0.0, 0.8)
         # # plt.savefig('/Users/nikogrupen/Desktop/{}_info_vs_lambda.png'.format(key))
+
+
+
 
         # plot MI vs. capture success
         fig = plt.figure()
@@ -350,7 +471,7 @@ def main(config):
         for i, k in enumerate(sorted(plot_data[key].keys())):
             patches.append(mpatches.Patch(color=colors[i], label='\u03BB = {}'.format(k.split('_')[-1])))
         plt.legend(handles=patches, loc='lower right', prop={'size': 14})
-        plt.savefig('/Users/nikogrupen/Desktop/{}_info_vs_success.png'.format(key))
+        plt.savefig('{}_info_vs_success.png'.format(key))
 
 
 if __name__ == '__main__':
