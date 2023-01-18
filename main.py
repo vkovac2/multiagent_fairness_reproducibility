@@ -46,9 +46,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=None, help='learning rate ')
     parser.add_argument('--batch_size', type=int, default=None, help='batch size')
     parser.add_argument('--buffer_length', type=int, default=None, help='replay buffer length')
-    parser.add_argument('--n_steps', type=int, default=None, help='number of steps to run per epoch')
-    parser.add_argument('--n_epochs', type=int, default=None, help='number of training epochs')
-    parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
+    parser.add_argument('--n_epochs', type=int, default=42000, help='number of training epochs')
+    parser.add_argument('--seed', type=int, default=72, help='random seed')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to checkpoint')
     parser.add_argument('--render', action='store_true', help='render the environment')
     parser.add_argument('--log_interval', type=int, default=None, help='training logs update interval')
@@ -58,7 +58,7 @@ if __name__ == '__main__':
     parser.add_argument('--world_size', type=float, default = 2.0)
     parser.add_argument('--lambda_coeff', type=float, default = 0)
     parser.add_argument('--decay', type=int, default=5000)
-    parser.add_argument('--equivariant', type=bool, default=True)
+    parser.add_argument('--equivariant', type=bool, default=False)
     parser.add_argument('--test_predator', type=str, default="greedy")
 
 

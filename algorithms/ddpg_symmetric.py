@@ -208,15 +208,20 @@ class Copy_DDPG_Agent(object):
 
         # init actor
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
-        self.actor_target = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
+         # copy params from reference actor
+        param_update_hard(self.actor, self.reference.actor.to(device))
         
-        # critic and target critic
         self.critic = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
+        param_update_hard(self.critic, self.reference.critic.to(device))
+       
+
+        # critic and target critic
+        self.actor_target = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
         self.critic_target = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
-        # copy params from reference actor
+
         param_update_hard(self.actor_target, self.actor)
         param_update_hard(self.critic_target, self.critic)
-
+        
         # optimizers
         self.actor_opt = optim.Adam(self.actor.parameters(), lr=config.actor_lr)
         self.critic_opt = optim.Adam(self.critic.parameters(), lr=config.critic_lr)
@@ -312,6 +317,8 @@ class DDPG_Runner():
         self.pred_test_vel = config.pred_test_vel
         self.equivariant = config.equivariant
 
+        print("Equivariant: " + str(self.equivariant))
+
         print('curriculum = {}'.format(self.use_curriculum))
 
         # environment properties
@@ -334,7 +341,6 @@ class DDPG_Runner():
         if(self.equivariant):
             sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
             self.predators = [sym_pred]
-            print(self.predators[0].get_params().keys())
             
             for i in range(self.env.num_preds - 1):
                 self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
@@ -346,7 +352,6 @@ class DDPG_Runner():
 
 
         self.num_preds = len(self.predators)
-        print(self.predators[1].get_params().keys())
 
         if config.mode is 'train' and self.checkpoint_path:
             print('loading warm-up model!')
@@ -359,7 +364,6 @@ class DDPG_Runner():
         self.prey = [decentralized_prey(env, i+len(self.predators), config.test_prey, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
         self.agents = self.predators + self.prey
-        print(self.agents[1].get_params().keys())
 
         
         self.is_training = True

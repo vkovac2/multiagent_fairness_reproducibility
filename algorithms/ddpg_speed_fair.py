@@ -332,7 +332,6 @@ class DDPG_Runner():
                         for k in range(self.num_agents):
                             if self.agents[k].learning_agent:
                                 save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
-                                print(self.agents[k].get_params().keys())
                     # logging
                     if epoch % self.log_interval == 0:
                         self.writer.add_scalar('epoch/steps', step, epoch)
