@@ -238,6 +238,8 @@ videos/
 data/
 results/
 results_no/
+v2/
+models/
 hacking/
 .vscode/
 .DS_Store
