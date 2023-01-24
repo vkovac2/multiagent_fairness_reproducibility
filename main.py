@@ -47,7 +47,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=None, help='batch size')
     parser.add_argument('--buffer_length', type=int, default=None, help='replay buffer length')
     parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
-    parser.add_argument('--n_epochs', type=int, default=1000, help='number of training epochs')
+    parser.add_argument('--n_epochs', type=int, default=42000, help='number of training epochs')
     parser.add_argument('--seed', type=int, default=72, help='random seed')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to checkpoint')
     parser.add_argument('--render', action='store_true', help='render the environment')
