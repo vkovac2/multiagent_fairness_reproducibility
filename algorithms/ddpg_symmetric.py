@@ -191,7 +191,7 @@ class Copy_DDPG_Agent(object):
         self.env = env
         self.index = index
         self.learning_agent = True
-        self.copy_agent = False
+        self.copy_agent = True
         # action space depends on problem
         if config.comm_env:
             self.action_space = self.env.action_space[self.index].spaces[0]

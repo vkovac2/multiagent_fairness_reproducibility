@@ -39,7 +39,7 @@ class BaseConfig(object):
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
     warmup_episodes = 333                       # number of experience episodes before training begins
     checkpoint_interval = 1000               # episodes between model checkpoints
-
+    num_landmarks = 0
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
 
