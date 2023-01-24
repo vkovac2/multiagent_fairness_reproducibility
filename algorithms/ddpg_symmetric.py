@@ -245,7 +245,7 @@ class Copy_DDPG_Agent(object):
 
         return action
 
-    def update_policy(self, epoch, reference_pred):
+    def update_policy(self, epoch):
         if epoch <= self.warmup_episodes:
             return
 
@@ -333,7 +333,7 @@ class DDPG_Runner():
 
         self.num_preds = len(self.predators)
 
-        if config.mode is 'train' and self.checkpoint_path:
+        if config.mode == 'train' and self.checkpoint_path:
             print('loading warm-up model!')
             # init predators from checkpoint
             for i, a in enumerate(self.predators):
@@ -351,7 +351,7 @@ class DDPG_Runner():
         # set start speed
         for i, a in enumerate(self.env.world.agents):
             if i < self.num_preds:
-                a.max_speed = self.pred_vel_start if config.mode is 'train' else self.pred_test_vel
+                a.max_speed = self.pred_vel_start if config.mode == 'train' else self.pred_test_vel
 
     def sample_actions(self, obs_n, epoch):
         actions, action_vecs = [], []
