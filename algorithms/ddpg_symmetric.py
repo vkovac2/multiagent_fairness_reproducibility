@@ -210,21 +210,6 @@ class Copy_DDPG_Agent(object):
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
          # copy params from reference actor
         param_update_hard(self.actor, self.reference.actor.to(device))
-        
-        self.critic = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
-        param_update_hard(self.critic, self.reference.critic.to(device))
-       
-
-        # critic and target critic
-        self.actor_target = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
-        self.critic_target = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
-
-        param_update_hard(self.actor_target, self.actor)
-        param_update_hard(self.critic_target, self.critic)
-        
-        # optimizers
-        self.actor_opt = optim.Adam(self.actor.parameters(), lr=config.actor_lr)
-        self.critic_opt = optim.Adam(self.critic.parameters(), lr=config.critic_lr)
 
         # running stats, replay buffer and random process
         if self.normalize:
@@ -282,12 +267,7 @@ class Copy_DDPG_Agent(object):
 
     def get_params(self):
         return {
-            'actor' : self.actor.state_dict(),
-            'critic' : self.critic.state_dict(),
-            'actor_target' : self.actor_target.state_dict(),
-            'critic_target' : self.critic_target.state_dict(),
-            'actor_opt' : self.actor_opt.state_dict(),
-            'critic_opt' : self.critic_opt.state_dict()
+            'actor' : self.actor.state_dict()
         }
 
     def load_params(self, params):
