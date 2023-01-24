@@ -191,7 +191,7 @@ class Copy_DDPG_Agent(object):
         self.env = env
         self.index = index
         self.learning_agent = True
-        self.copy_agent = False
+        self.copy_agent = True
         # action space depends on problem
         if config.comm_env:
             self.action_space = self.env.action_space[self.index].spaces[0]
@@ -210,21 +210,6 @@ class Copy_DDPG_Agent(object):
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
          # copy params from reference actor
         param_update_hard(self.actor, self.reference.actor.to(device))
-        
-        self.critic = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
-        param_update_hard(self.critic, self.reference.critic.to(device))
-       
-
-        # critic and target critic
-        self.actor_target = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
-        self.critic_target = Critic(self.observation_space, config.critic_hidden, self.action_space.shape[0]).to(device)
-
-        param_update_hard(self.actor_target, self.actor)
-        param_update_hard(self.critic_target, self.critic)
-        
-        # optimizers
-        self.actor_opt = optim.Adam(self.actor.parameters(), lr=config.actor_lr)
-        self.critic_opt = optim.Adam(self.critic.parameters(), lr=config.critic_lr)
 
         # running stats, replay buffer and random process
         if self.normalize:
@@ -260,7 +245,7 @@ class Copy_DDPG_Agent(object):
 
         return action
 
-    def update_policy(self, epoch, reference_pred):
+    def update_policy(self, epoch):
         if epoch <= self.warmup_episodes:
             return
 
@@ -282,12 +267,7 @@ class Copy_DDPG_Agent(object):
 
     def get_params(self):
         return {
-            'actor' : self.actor.state_dict(),
-            'critic' : self.critic.state_dict(),
-            'actor_target' : self.actor_target.state_dict(),
-            'critic_target' : self.critic_target.state_dict(),
-            'actor_opt' : self.actor_opt.state_dict(),
-            'critic_opt' : self.critic_opt.state_dict()
+            'actor' : self.actor.state_dict()
         }
 
     def load_params(self, params):
@@ -353,7 +333,7 @@ class DDPG_Runner():
 
         self.num_preds = len(self.predators)
 
-        if config.mode is 'train' and self.checkpoint_path:
+        if config.mode == 'train' and self.checkpoint_path:
             print('loading warm-up model!')
             # init predators from checkpoint
             for i, a in enumerate(self.predators):
@@ -371,7 +351,7 @@ class DDPG_Runner():
         # set start speed
         for i, a in enumerate(self.env.world.agents):
             if i < self.num_preds:
-                a.max_speed = self.pred_vel_start if config.mode is 'train' else self.pred_test_vel
+                a.max_speed = self.pred_vel_start if config.mode == 'train' else self.pred_test_vel
 
     def sample_actions(self, obs_n, epoch):
         actions, action_vecs = [], []

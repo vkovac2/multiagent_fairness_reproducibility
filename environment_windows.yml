@@ -1,4 +1,4 @@
-name: fact_v2
+name: multiagent_env
 channels:
   - pytorch
   - conda-forge
@@ -117,7 +117,6 @@ dependencies:
   - tensorboard-plugin-wit=1.8.1=py39haa95532_0
   - tk=8.6.12=h2bbff1b_0
   - toml=0.10.2=pyhd3eb1b0_0
-
   - torchaudio=0.13.1=py39_cpu
   - torchvision=0.14.1=py39_cpu
   - tornado=6.2=py39h2bbff1b_0
