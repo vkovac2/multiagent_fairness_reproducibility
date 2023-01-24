@@ -25,6 +25,8 @@ WORLD_SIZE = 2.0
 PRED_SIZE = 0.075
 PREY_SIZE = 0.05
 
+STEPS = 167
+
 
 
 def bin_angles(vecs, sums, m=None):
@@ -289,7 +291,7 @@ def main(config):
                         for i in range(len(trajectories['positions'])):
                             reward_vec = np.zeros(len(p_keys), dtype=np.int)
                             rew = -50.0
-                            if len(trajectories['positions'][i][p_keys[0]]) < 167:
+                            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
                                 num_captures += 1
                                 rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
                                 for j, key in enumerate(sorted(p_keys)):
@@ -406,7 +408,7 @@ def main(config):
         for i in range(len(trajectories['positions'])):
             reward_vec = np.zeros(len(p_keys), dtype=np.int)
             rew = -50.0
-            if len(trajectories['positions'][i][p_keys[0]]) < 167:
+            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
                 num_captures += 1
                 rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
                 for j, key in enumerate(sorted(p_keys)):
@@ -455,7 +457,7 @@ def main(config):
         for i in range(len(trajectories['positions'])):
             reward_vec = np.zeros(len(p_keys), dtype=np.int)
             rew = -50.0
-            if len(trajectories['positions'][i][p_keys[0]]) < 167:
+            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
                 num_captures += 1
                 rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
                 for j, key in enumerate(sorted(p_keys)):
@@ -472,7 +474,7 @@ def main(config):
         #PLOT3
         fig = plt.figure()
         x_pos = [i for i in range(8)]
-        vals = [results['reward_sums'].count(i) / len(results['reward_sums']) for i in range(8)]
+        vals = [results['reward_vectors'].count(i) / len(results['reward_vectors']) for i in range(8)]
         bar_width = 0.4
 
         
@@ -488,7 +490,7 @@ def main(config):
     x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
     plt.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['info'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
+    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos], ls='--', marker='*', label='Fair-E')
     
 
