@@ -68,6 +68,24 @@ class Trajectory_Collector():
             self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
         self.num_preds = len(self.predators)
        
+            # if self.checkpoint_path:
+            #         print('loading warm-up model!')
+            #         # init predators from checkpoint
+            #         for i, a in enumerate(self.predators):
+            #             if self.config.checkpoint_epoch:
+            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
+            #                 print(params.keys())
+            #             else:
+            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
+            #                 print(params.keys())
+            #                 print()
+            #             self.predators[i].load_params(params)
+            #     else:
+            #         raise ValueError('Path to checkpoint must be provided to test policy!')
+            # else:
+            #     self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
+            # self.num_preds = len(self.predators)
+
         # init prey as DDPG
         self.prey = [decentralized_prey(self.env, i+len(self.predators), config.prey_policy, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
@@ -170,9 +188,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
-    config = Config_DDPG_Symmetric()
-    # config = Config_DDPG_Speed_Fair()
+    # config = Config_DDPG_Symmetric()
+    config = Config_DDPG_Speed_Fair()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy

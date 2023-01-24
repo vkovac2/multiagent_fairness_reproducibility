@@ -50,7 +50,7 @@ python eval/collect_actions.py --env simple_torus --pred_policy greedy --prey_po
 ```
 * CD-DDPG pursuers against sophisticated evader: 
 ```eval
-python eval/collect_actions.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 75 --checkpoint_path /path/to/model/checkpoints
+python eval/collect_actions.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints
 ```
 
 To create fairness vs. utility plots, run:
