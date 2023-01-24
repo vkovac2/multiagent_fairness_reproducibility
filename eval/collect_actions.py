@@ -45,10 +45,10 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            # from algorithms.ddpg_speed_fair import DDPG_Agent
-            from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
+            from algorithms.ddpg_speed_fair import DDPG_Agent
+            # from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
             # self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
-            self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
 
             if self.checkpoint_path:
                 print('loading warm-up model!')
@@ -171,8 +171,8 @@ if __name__ == '__main__':
 
     # hacky way to get configs to work for trained models
     from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
-    config = Config_DDPG_Symmetric()
-    # config = Config_DDPG_Speed_Fair()
+    # config = Config_DDPG_Symmetric()
+    config = Config_DDPG_Speed_Fair()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy
