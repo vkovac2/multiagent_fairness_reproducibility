@@ -164,7 +164,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--collaborative', type=bool, default =True)
-    parser.add_argument('--equivariant', type=bool, default=False)
+    parser.add_argument('--equivariant', type=bool, default=True)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
