@@ -373,10 +373,6 @@ def main(config):
     fig = plt.figure()
     x_pos = TEST_VELS
 
-    # for x in x_pos:
-    #     print(plot_data[x])
-    #     print('-----------------')
-
     individual = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos]
     shared = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos]
     bar_width = 0.04
@@ -483,6 +479,8 @@ def main(config):
     #     plt.title('Fair-E')
     #     plt.savefig('shared_distr.png')
     # #-----------------------
+
+    return
 
     #PLOT4
     fig = plt.figure()
