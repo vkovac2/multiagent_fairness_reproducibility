@@ -182,7 +182,6 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = True)
-    parser.add_argument('--equivariant', type=bool, default=True)
     parser.add_argument('--num_landmarks', type = int, default=2)
 
     parser.set_defaults(verbose=False)
@@ -200,13 +199,10 @@ if __name__ == '__main__':
     config.directory = args.directory
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
-    config.equivariant = args.equivariant
     config.collaborative = args.collaborative
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
-
-    print("Equivariant: " + str(config.equivariant))
 
     comm_envs = []
     if config.env in comm_envs:
