@@ -58,3 +58,5 @@ To create fairness vs. utility plots, run:
 python eval/fairness_vs_utility.py --fp /path/to/folder/of/results
 ```
 
+
+<!-- 0.3: results/ddpg_speed_fair_simple_torus/exp_01_22_2023__14_03_55 -->

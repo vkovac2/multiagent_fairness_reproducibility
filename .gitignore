@@ -237,9 +237,13 @@ venv.bak/
 videos/
 data/
 results/
+results_no/
+v2/
+models/
 hacking/
 .vscode/
 .DS_Store
 ._.DS_Store
 
 *.out
+*.png
