@@ -196,7 +196,7 @@ class DDPG_Agent(object):
     def load_params(self, params):
         print('loading params for agent {}!'.format(self.index))
         self.actor.load_state_dict(params['actor'])
-        # self.critic.load_state_dict(params['critic'])
+        self.critic.load_state_dict(params['critic'])
         self.actor_target.load_state_dict(params['actor_target'])
         self.critic_target.load_state_dict(params['critic_target'])
         self.actor_opt.load_state_dict(params['actor_opt'])
