@@ -38,14 +38,14 @@ class BaseConfig(object):
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
     warmup_episodes = 333                       # number of experience episodes before training begins
-    checkpoint_interval = 1000 # episodes between model checkpoints
+    checkpoint_interval = 1000                  # episodes between model checkpoints
     num_landmarks = 0
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
 
     ######## book-keeping ########
     log_interval = 50                           # episodes between log updates
-    checkpoint_path = None                     # path for loading model checkpoints
+    checkpoint_path = None                      # path for loading model checkpoints
     scripts = ['main.py', 'configs.py']
 
     def show(self):

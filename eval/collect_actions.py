@@ -45,10 +45,10 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            # from algorithms.ddpg_speed_fair import DDPG_Agent
-            from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
-            # self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
-            self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            from algorithms.ddpg_speed_fair import DDPG_Agent
+            #from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
+            self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            #self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
 
             if self.checkpoint_path:
                 print('loading warm-up model!')
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     parser.add_argument('--directory', type=str, default='results/stored_trajectories/no_equivariance', help='path to save')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to load checkpoint from')
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
-    parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
+    parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = False)
     parser.add_argument('--equivariant', type=bool, default=False)
@@ -200,13 +200,10 @@ if __name__ == '__main__':
     config.directory = args.directory
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
-    config.equivariant = args.equivariant
     config.collaborative = args.collaborative
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
-
-    print("Equivariant: " + str(config.equivariant))
 
     comm_envs = []
     if config.env in comm_envs:

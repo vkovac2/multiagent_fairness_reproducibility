@@ -170,8 +170,8 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
     parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--collaborative', type=bool, default = False)
-    parser.add_argument('--equivariant', type=bool, default=False)
+    parser.add_argument('--collaborative', type=bool, default = True)
+    parser.add_argument('--equivariant', type=bool, default=True)
     parser.add_argument('--num_landmarks', type = int, default=2)
 
     parser.set_defaults(verbose=False)
@@ -196,6 +196,7 @@ if __name__ == '__main__':
     config.num_landmarks = args.num_landmarks
 
     print("Equivariant: " + str(config.equivariant))
+    print(f"Pred Vel: {config.pred_vel}")
 
     comm_envs = []
     if config.env in comm_envs:
