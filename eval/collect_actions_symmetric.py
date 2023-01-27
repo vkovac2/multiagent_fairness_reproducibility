@@ -173,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--collaborative', type=bool, default = True)
     parser.add_argument('--equivariant', type=bool, default=True)
     parser.add_argument('--num_landmarks', type = int, default=2)
-
+    parser.add_argument('--nb_agents', type=int, default=3)
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 
@@ -191,6 +191,7 @@ if __name__ == '__main__':
     config.checkpoint_epoch = args.checkpoint_epoch
     config.equivariant = args.equivariant
     config.collaborative = args.collaborative
+    config.nb_agents = args.nb_agents
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
