@@ -31,6 +31,7 @@ class Trajectory_Collector():
         self.discrete = False
         self.pred_policy = config.pred_policy
         self.pred_vel = config.pred_vel
+        self.num_prey = config.nb_prey
 
         # environment properties
         self.directory = config.directory
@@ -69,6 +70,7 @@ class Trajectory_Collector():
                         self.predators.append(Copy_DDPG_Agent(env, config, self.reference_agent, i))
                     
                     self.predators[-1].load_params(params)
+                    print(self.predators[-1])
             else:
                 raise ValueError('Path to checkpoint must be provided to test policy!')
         else:
@@ -174,6 +176,7 @@ if __name__ == '__main__':
     parser.add_argument('--equivariant', type=bool, default=True)
     parser.add_argument('--num_landmarks', type = int, default=2)
     parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 
@@ -192,6 +195,7 @@ if __name__ == '__main__':
     config.equivariant = args.equivariant
     config.collaborative = args.collaborative
     config.nb_agents = args.nb_agents
+    config.nb_prey = args.nb_prey
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks

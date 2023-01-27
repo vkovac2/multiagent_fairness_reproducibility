@@ -61,6 +61,7 @@ if __name__ == '__main__':
     parser.add_argument('--equivariant', type=bool, default=True)
     parser.add_argument('--test_predator', type=str, default="greedy")
     parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()

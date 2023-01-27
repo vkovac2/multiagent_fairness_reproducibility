@@ -65,6 +65,7 @@ class Config_DDPG_Symmetric(BaseConfig):
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
     nb_agents = 3
+    nb_prey = 1
     # inherited from other configs
     use_sensor_range = True                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication
@@ -86,6 +87,7 @@ class Config_DDPG_Speed_Fair(BaseConfig):
     test_predator = 'greedy'                    # bot policy to use for predators
     lambda_coeff = 0.0                          # strength of fairness constraint
     nb_agents = 3
+    nb_prey = 1
     # inherited from other configs
     use_sensor_range = False                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication

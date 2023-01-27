@@ -48,6 +48,7 @@ class Trajectory_Collector():
             from algorithms.ddpg_speed_fair import DDPG_Agent
             #from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
             self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            print(len(self.predators))
             #self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
 
             if self.checkpoint_path:
@@ -56,11 +57,9 @@ class Trajectory_Collector():
                 for i, a in enumerate(self.predators):
                     if self.config.checkpoint_epoch:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
-                        print(params.keys())
                     else:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
-                        print(params.keys())
-                        print()
+
                     self.predators[i].load_params(params)
             else:
                 raise ValueError('Path to checkpoint must be provided to test policy!')
@@ -89,10 +88,12 @@ class Trajectory_Collector():
         # init prey as DDPG
         self.prey = [decentralized_prey(self.env, i+len(self.predators), config.prey_policy, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
+
         self.agents = self.predators + self.prey
 
         self.agent_keys = ['p{}'.format(i+1) for i in range(self.env.num_preds)]
-        self.agent_keys.append('prey')
+        self.agent_keys.extend(['prey{}'.format(j+1) for j in range(self.env.num_prey)])
+        print(self.agent_keys)
 
         assert len(self.agents) == self.num_agents
 
@@ -184,6 +185,7 @@ if __name__ == '__main__':
     parser.add_argument('--collaborative', type=bool, default = True)
     parser.add_argument('--num_landmarks', type = int, default=2)
     parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
@@ -202,6 +204,7 @@ if __name__ == '__main__':
     config.checkpoint_epoch = args.checkpoint_epoch
     config.collaborative = args.collaborative
     config.nb_agents = args.nb_agents
+    config.nb_prey = args.nb_prey
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
