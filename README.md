@@ -60,3 +60,5 @@ python eval/fairness_vs_utility.py --fp /path/to/folder/of/results
 
 
 <!-- 0.3: results/ddpg_speed_fair_simple_torus/exp_01_22_2023__14_03_55 -->
+
+<!-- symm: results/ddpg_symmetric_simple_torus/exp_01_24_2023__21_06_09 -->

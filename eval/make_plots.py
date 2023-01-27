@@ -25,7 +25,7 @@ WORLD_SIZE = 2.0
 PRED_SIZE = 0.075
 PREY_SIZE = 0.05
 
-STEPS = 500
+STEPS = 167
 
 
 
@@ -212,13 +212,12 @@ def idx_to_vec(idx):
 
 TEST_VELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
 # TEST_VELS = [1.2, 1.1, 1.0, 0.9, 0.7, 0.6, 0.5]
-# TEST_VELS = [1.2]
 INVALID_STRATS = ['lambda_0.4', 'lambda_0.7']
 
 STRATS = [ "ddpg_symmetric", "ddpg_fair", "greedy"]
 COLLABS = [ "collab", "no_collab"]
 EQUIVARS = [ "equivar", "no_equivar"]
-LAMDAS = [0.0, 0.1, 0.2, 0.5, 1.0]
+LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.99999]
 
 def main(config):
     # load trajectories
@@ -259,26 +258,24 @@ def main(config):
                         vel_results[strat][collab][equivar][lamda] = {}                        
 
                         path = os.path.join(config.fp, "")
-                        path += strat + '_' + collab + '_' + equivar
+                        path += strat + '_' + collab
+                        
+                        #add equivariance to path
+                        if strat != "ddpg_fair":
+                            path += '_' + equivar
+                        
+                        #add lamda to path
                         if strat == "ddpg_fair":
-                            path += '_' + 'lamda' + '_' + str(lamda)
+                            path += '_' + 'lambda' + '_' + str(lamda)
                         elif strat == "greedy":
-                            # collab = 'no_collab'
-                            # equivar = 'no_equivar'
+                            # greedy paths have no lamda and no equivariance
                             path = os.path.join(config.fp, "") + strat
 
                         path += '_' + 'vel' + '_' + str(vel) + '.pkl'
 
-                        
-
                         if not os.path.exists(path):
+                            # print("BAD Path is: ", path)    
                             continue
-
-                        # if path in paths:
-                        #     continue
-                        # paths.append(path)
-
-                        print("Path is: ", path)
 
                         file = open(path, "rb")
                         trajectories = pickle.load(file)
@@ -303,9 +300,6 @@ def main(config):
 
                             vec_outcomes.append(vec_to_idx(reward_vec))
                             sum_outcomes.append(np.sum(reward_vec))
-
-                        # caps.append(num_captures/len(sum_outcomes))
-                        # rewards.append(rew)
 
 
                         # store results in dict
@@ -338,10 +332,6 @@ def main(config):
                         }
                         h_uniform = compute_conditional_entropy(uniform_conditionals, sum_marginals)
                         i_ra = h_uniform - h_cond
-                        # print('info = {}'.format(i_ra))
-                        # print('cap success = {}\n'.format(num_captures/len(sum_outcomes)))
-
-                        # mis.append(i_ra)
 
                         vel_results[strat][collab][equivar][lamda] = {
                             'reward' : rew,
@@ -349,7 +339,8 @@ def main(config):
                             'info' : i_ra
                         }
 
-                
+                        # print("Path is: ", path, num_captures/len(sum_outcomes))
+                        paths.append((path, num_captures/len(sum_outcomes)))
 
         # store results for strategy
         plot_data[vel] = vel_results
@@ -376,21 +367,22 @@ def main(config):
     individual = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos]
     shared = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos]
     bar_width = 0.04
+
+    x_pos.reverse()
     
-    plt.bar(x_pos, individual, bar_width, color='b', label="individual")
-    plt.bar([x + bar_width for x in x_pos], shared, bar_width, color='r', label="shared")
+    plt.bar(x_pos, shared, bar_width, color='b', label="shared")
+    plt.bar([x + bar_width for x in x_pos], individual, bar_width, color='r', label="individual")
     plt.xticks([x + bar_width/2 for x in x_pos], sorted(x_pos) )
     plt.xlabel('Pursuer Velocity')
     plt.ylabel('Capture Success %')
     plt.title('Mutual vs Individual Reward (Capture Success)')
-    plt.legend(loc="upper left")
+    plt.legend(loc="upper right")
 
     plt.savefig('success_vs_velocity.png')
     
     #-----------------------
 
-    path = "results_no/ddpg_symmetric_v2_collab_equivar_vel_1.1.pkl"
-    # path = "results_no/ddpg_symmetric_v2_32k_collab_no_equivar_vel_1.1.pkl"
+    path = "results_old/ddpg_symmetric_v2_32k_collab_no_equivar_vel_1.1.pkl"
     if os.path.exists(path):
         
         file = open(path, "rb")
@@ -437,60 +429,100 @@ def main(config):
         plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
         plt.ylabel('P(r)')
         plt.title('No Equivariance')
-        plt.savefig('plot2.png')
+        plt.savefig('individual.png')
     # #-----------------------
 
-    # path = "results_no/ddpg_symmetric_v2_collab_equivar_vel_1.1.pkl"
-    # if os.path.exists(path):
-    #     file = open(path, "rb")
-    #     trajectories = pickle.load(file)
-    #     file.close()
+    path = "results_old/ddpg_symmetric_v2_collab_equivar_vel_1.1.pkl"
+    if os.path.exists(path):
+        file = open(path, "rb")
+        trajectories = pickle.load(file)
+        file.close()
         
-    #     p_keys = sorted(trajectories['positions'][0].keys())[:-1]
-    #     vec_outcomes, sum_outcomes = [], []
-    #     num_captures = 0
-    #     for i in range(len(trajectories['positions'])):
-    #         reward_vec = np.zeros(len(p_keys), dtype=np.int)
-    #         rew = -50.0
-    #         if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
-    #             num_captures += 1
-    #             rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
-    #             for j, key in enumerate(sorted(p_keys)):
-    #                 # compute reward vector
-    #                 pred_pos = trajectories['positions'][i][key][-1]
-    #                 prey_pos = trajectories['positions'][i]['prey'][-1]
-    #                 dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
-    #                 if dist < PRED_SIZE + PREY_SIZE:
-    #                     reward_vec[j] = 1
+        p_keys = sorted(trajectories['positions'][0].keys())[:-1]
+        vec_outcomes, sum_outcomes = [], []
+        num_captures = 0
+        for i in range(len(trajectories['positions'])):
+            reward_vec = np.zeros(len(p_keys), dtype=np.int)
+            rew = -50.0
+            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
+                num_captures += 1
+                rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
+                for j, key in enumerate(sorted(p_keys)):
+                    # compute reward vector
+                    pred_pos = trajectories['positions'][i][key][-1]
+                    prey_pos = trajectories['positions'][i]['prey'][-1]
+                    dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
+                    if dist < PRED_SIZE + PREY_SIZE:
+                        reward_vec[j] = 1
 
-    #         vec_outcomes.append(vec_to_idx(reward_vec))
-    #         sum_outcomes.append(np.sum(reward_vec))
+            vec_outcomes.append(vec_to_idx(reward_vec))
+            sum_outcomes.append(np.sum(reward_vec))
 
-    #     #PLOT3
-    #     fig = plt.figure()
-    #     x_pos = [i for i in range(8)]
-    #     vals = [results['reward_vectors'].count(i) / len(results['reward_vectors']) for i in range(8)]
-    #     bar_width = 0.4
+        # store results in dict
+        results2 = {
+            'reward_vectors' : vec_outcomes,
+            'reward_sums' : sum_outcomes
+        }
+
+        # print(vec_outcomes)
+
+        #PLOT3
+        fig = plt.figure()
+        x_pos = [i for i in range(8)]
+        vals2 = [results2['reward_vectors'].count(i) / len(results2['reward_vectors']) for i in range(8)]
+        bar_width = 0.4
 
         
-    #     plt.bar(x_pos, vals, bar_width, color='b')
-    #     plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
-    #     plt.ylabel('P(r)')
-    #     plt.title('Fair-E')
-    #     plt.savefig('shared_distr.png')
-    # #-----------------------
+        plt.bar(x_pos, vals2, bar_width, color='b')
+        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+        plt.ylabel('P(r)')
+        plt.title('Fair-E')
+        plt.savefig('shared.png')
 
-    return
+
+        fig = plt.figure()
+        ax1 = fig.add_subplot(2,1,1)
+        ax1.bar(x_pos, vals, bar_width, color='g')
+        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+        plt.ylabel('P(r)')
+        plt.title('No Equivariance')
+
+        ax2 = fig.add_subplot(2,1,2)
+        ax2.bar(x_pos, vals2, bar_width, color='b')
+        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+        plt.ylabel('P(r)')
+        plt.title('Fair-E')
+
+        plt.subplots_adjust(
+                    # bottom=0.5,
+                    # top=0.9,
+                    wspace=0.4,
+                    hspace=0.8)
+
+        # Save the full figure...
+        fig.savefig('joined.png')
+
+
+    #-----------------------
+
 
     #PLOT4
     fig = plt.figure()
     x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
-    plt.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos], ls='--', marker='*', label='Fair-E')
+    
+    one = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos]
+    two = [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
+    three = [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
+    four = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos]
     
 
+    plt.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
+    plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+    plt.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
+    plt.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
+
+    plt.gca().invert_xaxis()
+    
     plt.xlabel('Pursuer Velocity')
     plt.ylabel('I(R,Z)')
     plt.title('Team Fairness')
@@ -499,12 +531,12 @@ def main(config):
 
     #PLOT5
     fig = plt.figure()
-    x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
     plt.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
     
+    plt.gca().invert_xaxis()
 
     plt.xlabel('Pursuer Velocity')
     plt.ylabel('Capture Success %')
@@ -512,78 +544,150 @@ def main(config):
     plt.legend()
     plt.savefig('utility.png')
 
-    return
+
+
+    #PLOTS 4-5
+    fig = plt.figure(figsize=(17,7))
+    plt.rcParams.update({'font.size': 18})
+    ax1 = fig.add_subplot(1,2,1)
+    x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
+    
+    one = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos]
+    two = [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
+    three = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['info'] for x in x_pos]
+    four = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos]
+    
+
+    ax1.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
+    ax1.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+    ax1.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
+    ax1.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
+
+    ax1.invert_xaxis()
+    
+    plt.xlabel('Pursuer Velocity')
+    plt.ylabel('I(R,Z)')
+    plt.title('Team Fairness')
+    plt.legend()
+
+    ax2 = fig.add_subplot(1,2,2)
+    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
+    ax2.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
+    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
+    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
+    
+    ax2.invert_xaxis()
+
+    plt.xlabel('Pursuer Velocity')
+    plt.ylabel('Capture Success %')
+    plt.title('Team Utility')
+    plt.legend()
+
+    # plt.subplots_adjust(
+    #             # bottom=0.5,
+    #             # top=0.9,
+    #             wspace=0.4,
+    #             hspace=0.8)
+
+    # Save the full figure...
+    
+
+
+    fig.savefig('3bc.png')
+
+    
+
+    # x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
+    # print([plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos])
+    # print([plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos])
+
+    
+    result = sorted(paths, key=lambda tup: tup[0])
+    for p in result:
+        print(p)
+
+
+
 
     # plot utility vs. lambda
-    print('plotting...')
-    print(plot_data.keys())
-    for key in sorted(plot_data.keys()):
-        # xs = [float(x.split('_')[-1]) for x in sorted(plot_data[key].keys())]
+    print('plot 6:')
 
-        print(plot_data[key].keys())
+    LAMDAS2 = [0.1, 0.2, 0.3, 0.5, 0.8]
+    vels = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    fig = plt.figure(figsize=(17,20))
+    # plt.rcParams.update({'font.size': 18})
+    sns.set(style="white", font_scale=1.5)
+    sns.set_context("poster")
+    sns.set_palette("Greys_r")
+    plt.rcParams["axes.grid"] = True
 
-        # plot reward
-        reward_ys = [np.mean(plot_data[key][y]['reward']) for y in sorted(plot_data[key].keys())]
-        reward__y_errs = [np.std(plot_data[key][y]['reward']) for y in sorted(plot_data[key].keys())]
+    print([plot_data[val]['ddpg_fair']['collab']['no_equivar'][0.5] for val in vels])
 
-        # fig = plt.figure()
-        # plt.plot(xs, reward_ys, linewidth=3)
-        # plt.ylim(-50.0, 50.0)
-        # plt.savefig('/Users/nikogrupen/Desktop/{}_reward_vs_lambda.png'.format(key))
-
-        # plot capture success
-        success_ys = [np.mean(plot_data[key][y]['capture_success']) for y in sorted(plot_data[key].keys())]
-        success_y_errs = [np.std(plot_data[key][y]['capture_success']) for y in sorted(plot_data[key].keys())]
-
-        peos = [1,2,3,4,5]
-
-        fig = plt.figure()
-        # plt.plot(peos, success_ys, linewidth=3)
-        # plt.ylim(0.0, 1.1)
+    for num, val in enumerate(vels):
+        ax1 = fig.add_subplot(3,2,num+1)
+        info_ys = [plot_data[val]['ddpg_fair']['collab']['no_equivar'][x]['info'] for x in LAMDAS2]
+        success_ys = [plot_data[val]['ddpg_fair']['collab']['no_equivar'][x]['capture_success'] for x in LAMDAS2]
         
-        x_pos = [0, 1, 2, 3, 4, 5, 6, 7]
-        bar_width = 0.04
+        # palette = plt.get_cmap('tab10')
+        # colors = [palette(i) for i in np.arange(len(info_ys))]
+        # plt.ylim(-0.05, 1.1)
+        # plt.xlim(-0.01, np.max(info_ys) + 0.05)
+        # plt.scatter(info_ys, success_ys, s=14**2, c=colors, marker='o', edgecolors='black', linewidths=1.2, zorder=10)
+        # patches = []
 
-        print(sorted(plot_data.keys()))
-        print(success_ys)
-        print(success_y_errs)
-        
-        plt.bar(sorted(plot_data.keys()), success_ys, bar_width, color='b')
-        plt.bar([x + bar_width for x in sorted(plot_data.keys())], success_y_errs, bar_width, color='r')
-        plt.xticks([x + bar_width/2 for x in x_pos], sorted(plot_data.keys()) )
-        plt.xlabel('Number')
-        plt.ylabel('Value')
-        plt.title('Two Bars Side by Side')
-        plt.savefig('{}_success_vs_lambda.png'.format(key))
+        plt.subplots_adjust(
+                # bottom=0.5,
+                # top=0.9,
+                wspace=0.4,
+                hspace=0.8)
 
-        # plot MI
-        info_ys = [np.mean(plot_data[key][y]['info']) for y in sorted(plot_data[key].keys())]
-        # fig = plt.figure()
-        # plt.plot(xs, info_ys, linewidth=3)
-        # plt.ylim(0.0, 0.8)
-        # # plt.savefig('/Users/nikogrupen/Desktop/{}_info_vs_lambda.png'.format(key))
-
-
-
-
-        # plot MI vs. capture success
-        fig = plt.figure()
-        sns.set(style="white", font_scale=1.5)
-        sns.set_context("poster")
-        sns.set_palette("Greys_r")
-        plt.rcParams["axes.grid"] = True
         sns.lineplot(x=info_ys, y=success_ys, style=True, dashes=[(2,2)]*len(info_ys), markers=False, legend=False)
         palette = plt.get_cmap('tab10')
         colors = [palette(i) for i in np.arange(len(info_ys))]
         plt.scatter(info_ys, success_ys, s=14**2, c=colors, marker='o', edgecolors='black', linewidths=1.2, zorder=10)
-        plt.errorbar(info_ys, success_ys, yerr=success_y_errs, linestyle="None", ecolor='black', elinewidth=1.5)
+        # plt.errorbar(info_ys, success_ys, linestyle="None", ecolor='black', elinewidth=1.5)
         plt.ylim(-0.05, 1.1)
         plt.xlim(-0.01, np.max(info_ys) + 0.05)
         patches = []
-        for i, k in enumerate(sorted(plot_data[key].keys())):
-            patches.append(mpatches.Patch(color=colors[i], label='\u03BB = {}'.format(k.split('_')[-1])))
-        plt.legend(handles=patches, loc='lower right', prop={'size': 14})
-        plt.savefig('{}_info_vs_success.png'.format(key))
+        for i,k in enumerate(LAMDAS2):
+            patches.append(mpatches.Patch(color=colors[i], label='\u03BB = {}'.format(k)))
+
+        
+        if num >= 4:
+            plt.xlabel('I(R;Z)')
+
+        if num % 2 == 0:
+            plt.ylabel('Capture Success %')
+
+
+        plt.title('Velocity ' + str(val))
+
+        plt.legend(handles=patches)
+
+    
+
+
+
+    plt.savefig('test.png')
+
+
+
+    # sns.set(style="white", font_scale=1.5)
+    # sns.set_context("poster")
+    # sns.set_palette("Greys_r")
+    # plt.rcParams["axes.grid"] = True
+    # sns.lineplot(x=info_ys, y=success_ys, style=True, dashes=[(2,2)]*len(info_ys), markers=False, legend=False)
+    # palette = plt.get_cmap('tab10')
+    # colors = [palette(i) for i in np.arange(len(info_ys))]
+    # plt.scatter(info_ys, success_ys, s=14**2, c=colors, marker='o', edgecolors='black', linewidths=1.2, zorder=10)
+    # plt.errorbar(info_ys, success_ys, yerr=success_y_errs, linestyle="None", ecolor='black', elinewidth=1.5)
+    # plt.ylim(-0.05, 1.1)
+    # plt.xlim(-0.01, np.max(info_ys) + 0.05)
+    # patches = []
+    # for i, k in enumerate(sorted(plot_data[key].keys())):
+    #     patches.append(mpatches.Patch(color=colors[i], label='\u03BB = {}'.format(k.split('_')[-1])))
+    # plt.legend(handles=patches, loc='lower right', prop={'size': 14})
+    # plt.savefig('{}_info_vs_success.png'.format(key))
 
 
 if __name__ == '__main__':
