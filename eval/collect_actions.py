@@ -46,8 +46,9 @@ class Trajectory_Collector():
         # init predators
         if self.pred_policy == 'ddpg':
             from algorithms.ddpg_speed_fair import DDPG_Agent
-            # self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            #from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
             self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            #self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
 
             if self.checkpoint_path:
                 print('loading warm-up model!')
@@ -67,6 +68,24 @@ class Trajectory_Collector():
             self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
         self.num_preds = len(self.predators)
        
+            # if self.checkpoint_path:
+            #         print('loading warm-up model!')
+            #         # init predators from checkpoint
+            #         for i, a in enumerate(self.predators):
+            #             if self.config.checkpoint_epoch:
+            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
+            #                 print(params.keys())
+            #             else:
+            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
+            #                 print(params.keys())
+            #                 print()
+            #             self.predators[i].load_params(params)
+            #     else:
+            #         raise ValueError('Path to checkpoint must be provided to test policy!')
+            # else:
+            #     self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
+            # self.num_preds = len(self.predators)
+
         # init prey as DDPG
         self.prey = [decentralized_prey(self.env, i+len(self.predators), config.prey_policy, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
@@ -155,22 +174,20 @@ if __name__ == '__main__':
     parser.add_argument('--pred_policy', default='random', help='Predator strategy.')
     parser.add_argument('--prey_policy', default='noop', help='Prey strategy.')
     parser.add_argument('--pred_vel', type=float, default=1.1, help='predator velocity.')
-    parser.add_argument('--n_steps', type=int, default=500, help='number of steps to run per epoch')
+    parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
     parser.add_argument('--n_epochs', type=int, default=100, help='number of training epochs')
     parser.add_argument('--directory', type=str, default='results/stored_trajectories/', help='path to save')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to load checkpoint from')
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
-    parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
+    parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--collaborative', type=bool, default = False)
-    parser.add_argument('--equivariant', type=bool, default=False)
+    parser.add_argument('--collaborative', type=bool, default = True)
     parser.add_argument('--num_landmarks', type = int, default=2)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
     # config = Config_DDPG_Symmetric()
     config = Config_DDPG_Speed_Fair()
     config.env = args.env
@@ -182,13 +199,10 @@ if __name__ == '__main__':
     config.directory = args.directory
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
-    config.equivariant = args.equivariant
     config.collaborative = args.collaborative
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
-
-    print("Equivariant: " + str(config.equivariant))
 
     comm_envs = []
     if config.env in comm_envs:
