@@ -1,5 +1,4 @@
-# Fairness for Cooperative Multi-Agent Learning with Equivariant Policies
-
+# Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study
 
 This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility STudy.
 
@@ -61,22 +60,23 @@ python main.py --env simple_torus --algorithm ddpg_symmetric --checkpoint_path /
 
 ## Evaluation
 
-To collect trajectories from a trained model, run _eval/collect_actions.py_. Here are a few examples:
+To collect trajectories from a trained model, run _eval/collect_actions.py_ or _eval/collect_actions_symmetric.py_. Here are a few examples:
 * Greedy pursuers against random-moving evader: 
 ```eval
 python eval/collect_actions.py --env simple_torus --pred_policy greedy --prey_policy random --seed 75 
 ```
-* CD-DDPG pursuers against sophisticated evader: 
+* CD-DDPG pursuers (FAIR-E) against sophisticated evader: 
+```eval
+python eval/collect_actions_symmetric.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints
+```
+
+```
+* CD-DDPG pursuers (FAIR-ER) against sophisticated evader: 
 ```eval
 python eval/collect_actions.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints
 ```
 
-To create fairness vs. utility plots, run:
+To create the plots, run:
 ```eval
-python eval/fairness_vs_utility.py --fp /path/to/folder/of/results
+python eval/make_plots.py #TODO Orestis fix script
 ```
-
-
-<!-- 0.3: results/ddpg_speed_fair_simple_torus/exp_01_22_2023__14_03_55 -->
-
-<!-- symm: results/ddpg_symmetric_simple_torus/exp_01_24_2023__21_06_09 -->
