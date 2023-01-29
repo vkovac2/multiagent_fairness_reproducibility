@@ -49,7 +49,7 @@ python main.py --env simple_torus --algorithm ddpg_symmetric --equivariant --col
 To train a Fair-ER model, run:
 
 ``` train
-python main.py --env simple_torus --algorithm ddpg_speed_fair
+python main.py --env simple_torus --algorithm ddpg_speed_fair --lambda_coeff 0.5
 ```
 * The control parameter of fairness can be adjusted in _configs.py_.
 
