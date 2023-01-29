@@ -83,7 +83,7 @@ class Trajectory_Collector():
         self.agents = self.predators + self.prey
 
         self.agent_keys = ['p{}'.format(i+1) for i in range(self.env.num_preds)]
-        self.agent_keys.append('prey')
+        self.agent_keys.extend(['prey{}'.format(j+1) for j in range(self.env.num_prey)])
 
         assert len(self.agents) == self.num_agents
 

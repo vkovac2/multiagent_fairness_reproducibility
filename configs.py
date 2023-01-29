@@ -37,8 +37,8 @@ class BaseConfig(object):
     use_curriculum = True                       # curriculum learning flag
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
-    warmup_episodes = 1                       # number of experience episodes before training begins
-    checkpoint_interval = 10                  # episodes between model checkpoints
+    warmup_episodes = 333               # number of experience episodes before training begins
+    checkpoint_interval = 2000                  # episodes between model checkpoints
     num_landmarks = 0
 
     ######## testing #########
