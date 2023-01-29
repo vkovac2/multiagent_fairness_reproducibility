@@ -1,15 +1,27 @@
 # Fairness for Cooperative Multi-Agent Learning with Equivariant Policies
 
-<!-- This repository is the official implementation of [My Paper Title](https://arxiv.org/abs/2030.12345).  -->
-This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies.
+
+This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility STudy.
+
+## Cloning the repository
+
+To clone the repository with the simple_particle_envs submodule:
+```
+git clone --recurse-submodules https://github.com/gerardPlanella/multiagent_fairness_reproducibility.git
+```
 
 ## Setup
-Python 3.5.4 (anaconda environment recommended)
+Installing the Recommended Anaconda environment (Python 3.9.15)
 
-To install requirements:
+Windows:
 ```
-pip install -r requirements.txt
+conda env create -f environment_windows.yml
 ```
+Linux:
+```
+conda env create -f environment_linux.yml
+```
+
 To setup multi-agent environments:
 ```
 cd simple_particle_envs
@@ -27,6 +39,12 @@ To train a Fair-E model, run:
 
 ```train
 python main.py --env simple_torus --algorithm ddpg_symmetric
+```
+
+To train a Fair-E model with equivariance and shared reward, run:
+
+```train
+python main.py --env simple_torus --algorithm ddpg_symmetric --equivariant --collaborative
 ```
 
 To train a Fair-ER model, run:

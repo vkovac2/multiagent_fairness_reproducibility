@@ -25,6 +25,7 @@ dependencies:
   - colorama=0.4.6=py39haa95532_0
   - contourpy=1.0.5=py39h59b6b97_0
   - cpuonly=2.0=0
+  - seaborn
   - cryptography=38.0.4=py39h21b164f_0
   - cycler=0.11.0=pyhd3eb1b0_0
   - ffmpeg=4.3.1=ha925a31_0
