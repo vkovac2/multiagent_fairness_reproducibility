@@ -217,7 +217,7 @@ INVALID_STRATS = ['lambda_0.4', 'lambda_0.7']
 STRATS = [ "ddpg_symmetric", "ddpg_fair", "greedy"]
 COLLABS = [ "collab", "no_collab"]
 EQUIVARS = [ "equivar", "no_equivar"]
-LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.9, 0.99999]
+LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.99999]
 
 def main(config):
     # load trajectories
@@ -291,13 +291,9 @@ def main(config):
                                 num_captures += 1
                                 rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
                                 for j, key in enumerate(sorted(p_keys)):
-                                    # compute reward vector    
+                                    # compute reward vector
                                     pred_pos = trajectories['positions'][i][key][-1]
-                                    if 'prey' in trajectories['positions'][i].keys():
-                                        prey_pos = trajectories['positions'][i]['prey'][-1]
-                                    else:
-                                        prey_pos = trajectories['positions'][i]['prey1'][-1]
-                                        
+                                    prey_pos = trajectories['positions'][i]['prey'][-1]
                                     dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
                                     if dist < PRED_SIZE + PREY_SIZE:
                                         reward_vec[j] = 1
@@ -368,8 +364,8 @@ def main(config):
     fig = plt.figure()
     x_pos = TEST_VELS
 
-    individual = [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos]
-    shared = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos]
+    individual = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos]
+    shared = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos]
     bar_width = 0.04
 
     x_pos.reverse()
@@ -386,7 +382,7 @@ def main(config):
     
     #-----------------------
 
-    path = "results_new/ddpg_symmetric_collab_no_equivar_vel_1.1.pkl"
+    path = "results_old/ddpg_symmetric_v2_32k_collab_no_equivar_vel_1.1.pkl"
     if os.path.exists(path):
         
         file = open(path, "rb")
@@ -405,11 +401,7 @@ def main(config):
                 for j, key in enumerate(sorted(p_keys)):
                     # compute reward vector
                     pred_pos = trajectories['positions'][i][key][-1]
-                    if 'prey' in trajectories['positions'][i].keys():
-                        prey_pos = trajectories['positions'][i]['prey'][-1]
-                    else:
-                        prey_pos = trajectories['positions'][i]['prey1'][-1]
-                    
+                    prey_pos = trajectories['positions'][i]['prey'][-1]
                     dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
                     if dist < PRED_SIZE + PREY_SIZE:
                         reward_vec[j] = 1
@@ -440,8 +432,7 @@ def main(config):
         plt.savefig('individual.png')
     # #-----------------------
 
-    # path = "results_new/ddpg_symmetric_collab_equivar_vel_1.1.pkl"
-    path = "results_new/trajectories.pkl"
+    path = "results_old/ddpg_symmetric_v2_collab_equivar_vel_1.1.pkl"
     if os.path.exists(path):
         file = open(path, "rb")
         trajectories = pickle.load(file)
@@ -459,10 +450,7 @@ def main(config):
                 for j, key in enumerate(sorted(p_keys)):
                     # compute reward vector
                     pred_pos = trajectories['positions'][i][key][-1]
-                    if 'prey' in trajectories['positions'][i].keys():
-                        prey_pos = trajectories['positions'][i]['prey'][-1]
-                    else:
-                        prey_pos = trajectories['positions'][i]['prey1'][-1]
+                    prey_pos = trajectories['positions'][i]['prey'][-1]
                     dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
                     if dist < PRED_SIZE + PREY_SIZE:
                         reward_vec[j] = 1
@@ -545,7 +533,7 @@ def main(config):
     fig = plt.figure()
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
     plt.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
+    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
     plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
     
     plt.gca().invert_xaxis()
@@ -566,7 +554,7 @@ def main(config):
     
     one = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos]
     two = [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
-    three = [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
+    three = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['info'] for x in x_pos]
     four = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos]
     
 
@@ -585,7 +573,7 @@ def main(config):
     ax2 = fig.add_subplot(1,2,2)
     ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
     ax2.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
+    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
     ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
     
     ax2.invert_xaxis()
@@ -624,7 +612,7 @@ def main(config):
     # plot utility vs. lambda
     print('plot 6:')
 
-    LAMDAS2 = [0.1, 0.2, 0.3, 0.5, 0.8, 0.9]
+    LAMDAS2 = [0.1, 0.2, 0.3, 0.5, 0.8]
     vels = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     fig = plt.figure(figsize=(17,20))
     # plt.rcParams.update({'font.size': 18})
@@ -633,7 +621,7 @@ def main(config):
     sns.set_palette("Greys_r")
     plt.rcParams["axes.grid"] = True
 
-    # print([plot_data[val]['ddpg_fair']['collab']['no_equivar'][0.5] for val in vels])
+    print([plot_data[val]['ddpg_fair']['collab']['no_equivar'][0.5] for val in vels])
 
     for num, val in enumerate(vels):
         ax1 = fig.add_subplot(3,2,num+1)

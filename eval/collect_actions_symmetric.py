@@ -165,14 +165,14 @@ if __name__ == '__main__':
     parser.add_argument('--pred_vel', type=float, default=1.0, help='predator velocity.')
     parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
     parser.add_argument('--n_epochs', type=int, default=100, help='number of training epochs')
-    parser.add_argument('--directory', type=str, default='results/stored_trajectories/no_equivariance', help='path to save')
+    parser.add_argument('--directory', type=str, default='results/stored_trajectories/collab_equivar', help='path to save')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to load checkpoint from')
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
     parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = True)
     parser.add_argument('--equivariant', type=bool, default=True)
-    parser.add_argument('--num_landmarks', type = int, default=2)
+    parser.add_argument('--num_landmarks', type = int, default=0)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
@@ -196,7 +196,7 @@ if __name__ == '__main__':
     config.num_landmarks = args.num_landmarks
 
     print("Equivariant: " + str(config.equivariant))
-    print(f"Pred Vel: {config.pred_vel}")
+    print("Pred Vel: " + str(config.pred_vel))
 
     comm_envs = []
     if config.env in comm_envs:
