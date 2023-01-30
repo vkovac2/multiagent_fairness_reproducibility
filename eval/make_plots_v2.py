@@ -209,6 +209,79 @@ def idx_to_vec(idx):
         return '[r, r, r]'
     else:
         raise ValueError('Incorrect reward index!')
+    
+def compute_results(path):
+    if not os.path.exists(path):
+        print("File does not exist!")    
+        return
+
+    file = open(path, "rb")
+    trajectories = pickle.load(file)
+    file.close()
+    
+    p_keys = sorted(trajectories['positions'][0].keys())[:-1]
+    vec_outcomes, sum_outcomes = [], []
+    num_captures = 0
+    for i in range(len(trajectories['positions'])):
+        reward_vec = np.zeros(len(p_keys), dtype=np.int)
+        rew = -50.0
+        if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
+            num_captures += 1
+            rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
+            for j, key in enumerate(sorted(p_keys)):
+                # compute reward vector    
+                pred_pos = trajectories['positions'][i][key][-1]
+                if 'prey' in trajectories['positions'][i].keys():
+                    prey_pos = trajectories['positions'][i]['prey'][-1]
+                else:
+                    prey_pos = trajectories['positions'][i]['prey1'][-1]
+                    
+                dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
+                if dist < PRED_SIZE + PREY_SIZE:
+                    reward_vec[j] = 1
+
+        vec_outcomes.append(vec_to_idx(reward_vec))
+        sum_outcomes.append(np.sum(reward_vec))
+
+    # store rewards in dict
+    rewards = {
+        'reward_vectors' : vec_outcomes,
+        'reward_sums' : sum_outcomes
+    }
+
+    # compute joint
+    joint = compute_joint(rewards)
+
+    # reward sum marginals
+    sum_marginals = compute_marginals(joint, 'reward_sums')
+
+    # reward vector conditioned on sum
+    conditionals = {}
+    for val in joint['reward_sums'].unique():
+        cond = compute_conditional(joint, 'reward_vectors', 'reward_sums', val)
+        conditionals['P(R|A={})'.format(val)] = list(cond['prob'])
+    
+    # I(R;A)
+    h_cond = compute_conditional_entropy(conditionals, sum_marginals)
+
+    # compare to uniform conditional entropy
+    uniform_conditionals = {
+        'P(R|A=0)' : [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        'P(R|A=1)' : [0.0, 1/3, 1/3, 1/3, 0.0, 0.0, 0.0, 0.0],
+        'P(R|A=2)' : [0.0, 0.0, 0.0, 0.0, 1/3, 1/3, 1/3, 0.0],
+        'P(R|A=3)' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+    }
+    h_uniform = compute_conditional_entropy(uniform_conditionals, sum_marginals)
+    i_ra = h_uniform - h_cond
+
+    results = {
+        'reward' : rew,
+        'capture_success' : num_captures/len(sum_outcomes),
+        'info' : i_ra
+    }
+
+    return rewards, results
+
 
 TEST_VELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
 # TEST_VELS = [1.2, 1.1, 1.0, 0.9, 0.7, 0.6, 0.5]
@@ -217,135 +290,10 @@ INVALID_STRATS = ['lambda_0.4', 'lambda_0.7']
 STRATS = [ "ddpg_symmetric", "ddpg_fair", "greedy"]
 COLLABS = [ "collab", "no_collab"]
 EQUIVARS = [ "equivar", "no_equivar"]
-LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.99999]
+LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.9, 0.99999]
 
 def main(config):
-    # load trajectories
 
-    paths = []
-    plot_data = {}
-
-    #for each velocity    
-    for vel in sorted(TEST_VELS):
-        vel_results = {}
-        #for each algorithm
-        for strat in sorted(STRATS):
-            # path = os.path.join(config.fp, "")
-            # path += strat
-            vel_results[strat] = {}
-
-            #for colab or not
-            for collab in COLLABS:
-                # path = os.path.join(path, '_', collab)
-                # path += '_' + collab
-                
-                vel_results[strat][collab] = {}
-
-                #for equivariance or not
-                for equivar in EQUIVARS:
-                    # path = os.path.join(path, '_', equivar)
-                    # path += '_' + equivar
-                    
-                    vel_results[strat][collab][equivar] = {}
-
-                    #for every lamda (other than ddpg_fair, everything)
-                    for lamda in LAMDAS:
-
-                        if strat != "ddpg_fair" and lamda!=0:
-                            # lamda = 0
-                            continue
-                        
-                        vel_results[strat][collab][equivar][lamda] = {}                        
-
-                        path = os.path.join(config.fp, "")
-                        path += strat + '_' + collab
-                        
-                        #add equivariance to path
-                        if strat != "ddpg_fair":
-                            path += '_' + equivar
-                        
-                        #add lamda to path
-                        if strat == "ddpg_fair":
-                            path += '_' + 'lambda' + '_' + str(lamda)
-                        elif strat == "greedy":
-                            # greedy paths have no lamda and no equivariance
-                            path = os.path.join(config.fp, "") + strat
-
-                        path += '_' + 'vel' + '_' + str(vel) + '.pkl'
-
-                        if not os.path.exists(path):
-                            # print("BAD Path is: ", path)    
-                            continue
-
-                        file = open(path, "rb")
-                        trajectories = pickle.load(file)
-                        file.close()
-                        
-                        p_keys = sorted(trajectories['positions'][0].keys())[:-1]
-                        vec_outcomes, sum_outcomes = [], []
-                        num_captures = 0
-                        for i in range(len(trajectories['positions'])):
-                            reward_vec = np.zeros(len(p_keys), dtype=np.int)
-                            rew = -50.0
-                            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
-                                num_captures += 1
-                                rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
-                                for j, key in enumerate(sorted(p_keys)):
-                                    # compute reward vector
-                                    pred_pos = trajectories['positions'][i][key][-1]
-                                    prey_pos = trajectories['positions'][i]['prey'][-1]
-                                    dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
-                                    if dist < PRED_SIZE + PREY_SIZE:
-                                        reward_vec[j] = 1
-
-                            vec_outcomes.append(vec_to_idx(reward_vec))
-                            sum_outcomes.append(np.sum(reward_vec))
-
-
-                        # store results in dict
-                        results = {
-                            'reward_vectors' : vec_outcomes,
-                            'reward_sums' : sum_outcomes
-                        }
-
-                        # compute joint
-                        joint = compute_joint(results)
-
-                        # reward sum marginals
-                        sum_marginals = compute_marginals(joint, 'reward_sums')
-
-                        # reward vector conditioned on sum
-                        conditionals = {}
-                        for val in joint['reward_sums'].unique():
-                            cond = compute_conditional(joint, 'reward_vectors', 'reward_sums', val)
-                            conditionals['P(R|A={})'.format(val)] = list(cond['prob'])
-                        
-                        # I(R;A)
-                        h_cond = compute_conditional_entropy(conditionals, sum_marginals)
-
-                        # compare to uniform conditional entropy
-                        uniform_conditionals = {
-                            'P(R|A=0)' : [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                            'P(R|A=1)' : [0.0, 1/3, 1/3, 1/3, 0.0, 0.0, 0.0, 0.0],
-                            'P(R|A=2)' : [0.0, 0.0, 0.0, 0.0, 1/3, 1/3, 1/3, 0.0],
-                            'P(R|A=3)' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                        }
-                        h_uniform = compute_conditional_entropy(uniform_conditionals, sum_marginals)
-                        i_ra = h_uniform - h_cond
-
-                        vel_results[strat][collab][equivar][lamda] = {
-                            'reward' : rew,
-                            'capture_success' : num_captures/len(sum_outcomes),
-                            'info' : i_ra
-                        }
-
-                        # print("Path is: ", path, num_captures/len(sum_outcomes))
-                        paths.append((path, num_captures/len(sum_outcomes)))
-
-        # store results for strategy
-        plot_data[vel] = vel_results
-
-    
     # keys: 
     # velocity [float]
     # strategy [string]
@@ -360,16 +308,19 @@ def main(config):
     
 
     #PLOT1
-    import random
-    fig = plt.figure()
+    
     x_pos = TEST_VELS
 
-    individual = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos]
-    shared = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos]
+    path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+    individual = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+    
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+    shared = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
     bar_width = 0.04
 
     x_pos.reverse()
-    
+
+    fig = plt.figure()
     plt.bar(x_pos, shared, bar_width, color='b', label="shared")
     plt.bar([x + bar_width for x in x_pos], individual, bar_width, color='r', label="individual")
     plt.xticks([x + bar_width/2 for x in x_pos], sorted(x_pos) )
@@ -382,125 +333,62 @@ def main(config):
     
     #-----------------------
 
-    path = "results_old/ddpg_symmetric_v2_32k_collab_no_equivar_vel_1.1.pkl"
-    if os.path.exists(path):
+    path = "results_new/ddpg_symmetric_collab_no_equivar_vel_1.1.pkl"
+    rewards, results = compute_results(path)
         
-        file = open(path, "rb")
-        trajectories = pickle.load(file)
-        file.close()
-        
-        p_keys = sorted(trajectories['positions'][0].keys())[:-1]
-        vec_outcomes, sum_outcomes = [], []
-        num_captures = 0
-        for i in range(len(trajectories['positions'])):
-            reward_vec = np.zeros(len(p_keys), dtype=np.int)
-            rew = -50.0
-            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
-                num_captures += 1
-                rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
-                for j, key in enumerate(sorted(p_keys)):
-                    # compute reward vector
-                    pred_pos = trajectories['positions'][i][key][-1]
-                    prey_pos = trajectories['positions'][i]['prey'][-1]
-                    dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
-                    if dist < PRED_SIZE + PREY_SIZE:
-                        reward_vec[j] = 1
+    #PLOT2
+    fig = plt.figure()
+    x_pos = [i for i in range(8)]
+    vals = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(8)]
 
-            vec_outcomes.append(vec_to_idx(reward_vec))
-            sum_outcomes.append(np.sum(reward_vec))
+    bar_width = 0.4
 
 
-        # store results in dict
-        results = {
-            'reward_vectors' : vec_outcomes,
-            'reward_sums' : sum_outcomes
-        }
-        
-        
-        
-        #PLOT2
-        fig = plt.figure()
-        x_pos = [i for i in range(8)]
-        vals = [results['reward_vectors'].count(i) / len(results['reward_vectors']) for i in range(8)]
-        bar_width = 0.4
-
-    
-        plt.bar(x_pos, vals, bar_width, color='g')
-        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
-        plt.ylabel('P(r)')
-        plt.title('No Equivariance')
-        plt.savefig('individual.png')
+    plt.bar(x_pos, vals, bar_width, color='g')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('No Equivariance')
+    plt.savefig('individual.png')
     # #-----------------------
 
-    path = "results_old/ddpg_symmetric_v2_collab_equivar_vel_1.1.pkl"
-    if os.path.exists(path):
-        file = open(path, "rb")
-        trajectories = pickle.load(file)
-        file.close()
-        
-        p_keys = sorted(trajectories['positions'][0].keys())[:-1]
-        vec_outcomes, sum_outcomes = [], []
-        num_captures = 0
-        for i in range(len(trajectories['positions'])):
-            reward_vec = np.zeros(len(p_keys), dtype=np.int)
-            rew = -50.0
-            if len(trajectories['positions'][i][p_keys[0]]) < STEPS:
-                num_captures += 1
-                rew = 50.0 - len(trajectories['positions'][i][p_keys[0]]) * 0.1
-                for j, key in enumerate(sorted(p_keys)):
-                    # compute reward vector
-                    pred_pos = trajectories['positions'][i][key][-1]
-                    prey_pos = trajectories['positions'][i]['prey'][-1]
-                    dist = toroidal_distance(pred_pos, prey_pos, WORLD_SIZE)
-                    if dist < PRED_SIZE + PREY_SIZE:
-                        reward_vec[j] = 1
+    path = "results_new/ddpg_symmetric_collab_equivar_vel_1.1.pkl"
+    rewards, results = compute_results(path)
 
-            vec_outcomes.append(vec_to_idx(reward_vec))
-            sum_outcomes.append(np.sum(reward_vec))
+    #PLOT3
+    fig = plt.figure()
+    x_pos = [i for i in range(8)]
+    vals2 = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(8)]
+    bar_width = 0.4
 
-        # store results in dict
-        results2 = {
-            'reward_vectors' : vec_outcomes,
-            'reward_sums' : sum_outcomes
-        }
-
-        # print(vec_outcomes)
-
-        #PLOT3
-        fig = plt.figure()
-        x_pos = [i for i in range(8)]
-        vals2 = [results2['reward_vectors'].count(i) / len(results2['reward_vectors']) for i in range(8)]
-        bar_width = 0.4
-
-        
-        plt.bar(x_pos, vals2, bar_width, color='b')
-        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
-        plt.ylabel('P(r)')
-        plt.title('Fair-E')
-        plt.savefig('shared.png')
+    
+    plt.bar(x_pos, vals2, bar_width, color='b')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('Fair-E')
+    plt.savefig('shared.png')
 
 
-        fig = plt.figure()
-        ax1 = fig.add_subplot(2,1,1)
-        ax1.bar(x_pos, vals, bar_width, color='g')
-        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
-        plt.ylabel('P(r)')
-        plt.title('No Equivariance')
+    fig = plt.figure()
+    ax1 = fig.add_subplot(2,1,1)
+    ax1.bar(x_pos, vals, bar_width, color='g')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('No Equivariance')
 
-        ax2 = fig.add_subplot(2,1,2)
-        ax2.bar(x_pos, vals2, bar_width, color='b')
-        plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
-        plt.ylabel('P(r)')
-        plt.title('Fair-E')
+    ax2 = fig.add_subplot(2,1,2)
+    ax2.bar(x_pos, vals2, bar_width, color='b')
+    plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
+    plt.ylabel('P(r)')
+    plt.title('Fair-E')
 
-        plt.subplots_adjust(
-                    # bottom=0.5,
-                    # top=0.9,
-                    wspace=0.4,
-                    hspace=0.8)
+    plt.subplots_adjust(
+                # bottom=0.5,
+                # top=0.9,
+                wspace=0.4,
+                hspace=0.8)
 
-        # Save the full figure...
-        fig.savefig('joined.png')
+    # Save the full figure...
+    fig.savefig('joined.png')
 
 
     #-----------------------
@@ -509,11 +397,18 @@ def main(config):
     #PLOT4
     fig = plt.figure()
     x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
-    
-    one = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos]
-    two = [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
-    three = [plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
-    four = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+    one = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'greedy_vel_') 
+    two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+    three = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+    four = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
     
 
     plt.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
@@ -530,11 +425,24 @@ def main(config):
     plt.savefig('fairness.png')
 
     #PLOT5
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+    one = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'greedy_vel_') 
+    two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+    three = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+    four = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
     fig = plt.figure()
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
-    plt.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
-    plt.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
+    plt.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
+    plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+    plt.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
+    plt.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
     
     plt.gca().invert_xaxis()
 
@@ -552,10 +460,17 @@ def main(config):
     ax1 = fig.add_subplot(1,2,1)
     x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
     
-    one = [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['info'] for x in x_pos]
-    two = [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['info'] for x in x_pos]
-    three = [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['info'] for x in x_pos]
-    four = [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['info'] for x in x_pos]
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+    one = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'greedy_vel_') 
+    two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+    three = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+    four = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
     
 
     ax1.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
@@ -571,11 +486,23 @@ def main(config):
     plt.legend()
 
     ax2 = fig.add_subplot(1,2,2)
-    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='+', label='No Equivariance')
-    ax2.plot(x_pos, [plot_data[x]['greedy']['no_collab']['no_equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='.', label='Greedy')
-    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['no_collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='o', label='Individual Reward')
-    ax2.plot(x_pos, [plot_data[x]['ddpg_symmetric']['collab']['equivar'][0]['capture_success'] for x in x_pos], ls='--', marker='*', label='Fair-E')
-    
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+    one = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'greedy_vel_') 
+    two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+    three = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+    four = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+
+    ax2.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
+    ax2.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+    ax2.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
+    ax2.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
+
     ax2.invert_xaxis()
 
     plt.xlabel('Pursuer Velocity')
@@ -602,9 +529,9 @@ def main(config):
     # print([plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos])
 
     
-    result = sorted(paths, key=lambda tup: tup[0])
-    for p in result:
-        print(p)
+    # result = sorted(paths, key=lambda tup: tup[0])
+    # for p in result:
+    #     print(p)
 
 
 
@@ -612,7 +539,7 @@ def main(config):
     # plot utility vs. lambda
     print('plot 6:')
 
-    LAMDAS2 = [0.1, 0.2, 0.3, 0.5, 0.8]
+    LAMDAS2 = [0.1, 0.2, 0.3, 0.5, 0.8, 0.9]
     vels = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     fig = plt.figure(figsize=(17,20))
     # plt.rcParams.update({'font.size': 18})
@@ -621,12 +548,18 @@ def main(config):
     sns.set_palette("Greys_r")
     plt.rcParams["axes.grid"] = True
 
-    print([plot_data[val]['ddpg_fair']['collab']['no_equivar'][0.5] for val in vels])
+    # print([plot_data[val]['ddpg_fair']['collab']['no_equivar'][0.5] for val in vels])
 
     for num, val in enumerate(vels):
         ax1 = fig.add_subplot(3,2,num+1)
-        info_ys = [plot_data[val]['ddpg_fair']['collab']['no_equivar'][x]['info'] for x in LAMDAS2]
-        success_ys = [plot_data[val]['ddpg_fair']['collab']['no_equivar'][x]['capture_success'] for x in LAMDAS2]
+        info_ys = []
+        success_ys = []
+        for x in LAMDAS2:
+            path = os.path.join(config.fp, 'ddpg_fair_collab_lambda_' + str(x) + '_vel_' + str(val) + '.pkl')
+            rewards, results = compute_results(path)
+
+            info_ys.append(results['info'])
+            success_ys.append(results['capture_success'])
         
         # palette = plt.get_cmap('tab10')
         # colors = [palette(i) for i in np.arange(len(info_ys))]

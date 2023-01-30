@@ -305,7 +305,6 @@ def main(config):
                             vec_outcomes.append(vec_to_idx(reward_vec))
                             sum_outcomes.append(np.sum(reward_vec))
 
-
                         # store results in dict
                         results = {
                             'reward_vectors' : vec_outcomes,
@@ -430,6 +429,7 @@ def main(config):
         fig = plt.figure()
         x_pos = [i for i in range(8)]
         vals = [results['reward_vectors'].count(i) / len(results['reward_vectors']) for i in range(8)]
+
         bar_width = 0.4
 
     
@@ -440,8 +440,8 @@ def main(config):
         plt.savefig('individual.png')
     # #-----------------------
 
-    # path = "results_new/ddpg_symmetric_collab_equivar_vel_1.1.pkl"
-    path = "results_new/trajectories.pkl"
+    path = "results_new/ddpg_symmetric_collab_equivar_vel_1.1.pkl"
+    # path = "results_new/trajectories.pkl"
     if os.path.exists(path):
         file = open(path, "rb")
         trajectories = pickle.load(file)
@@ -475,8 +475,6 @@ def main(config):
             'reward_vectors' : vec_outcomes,
             'reward_sums' : sum_outcomes
         }
-
-        # print(vec_outcomes)
 
         #PLOT3
         fig = plt.figure()
@@ -614,9 +612,9 @@ def main(config):
     # print([plot_data[x]['ddpg_symmetric']['no_collab']['no_equivar'][0]['info'] for x in x_pos])
 
     
-    result = sorted(paths, key=lambda tup: tup[0])
-    for p in result:
-        print(p)
+    # result = sorted(paths, key=lambda tup: tup[0])
+    # for p in result:
+    #     print(p)
 
 
 
