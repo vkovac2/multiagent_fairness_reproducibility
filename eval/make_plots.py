@@ -363,7 +363,6 @@ def main(config):
     
 
     #PLOT1
-    import random
     fig = plt.figure()
     x_pos = TEST_VELS
 

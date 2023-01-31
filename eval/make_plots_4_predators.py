@@ -18,8 +18,8 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from utils.misc import *
 
-N_VEC_OUTCOMES = 8 
-N_SUM_OUTCOMES = 4
+N_VEC_OUTCOMES = 16 
+N_SUM_OUTCOMES = 5
 
 WORLD_SIZE = 2.0
 PRED_SIZE = 0.075
@@ -104,62 +104,103 @@ def compute_conditional_entropy(conditionals, sum_marginals):
     return -h
 
 
-
 '''
-Possible Reward Vector (i.e. Identity) Assignments R = [r1, r2, r3]:
-    0: [0,0,0]
-    1: [0,0,1]
-    2: [0,1,0]
-    3: [1,0,0]
-    4: [0,1,1]
-    5: [1,0,1]
-    6: [1,1,0]
-    7: [1,1,1]
+Possible Reward Vector (i.e. Identity) Assignments R = [r1, r2, r3, r4]:
+    0: [0,0,0,0]
+    1: [0,0,0,1]
+    2: [0,0,1,0]
+    3: [0,1,0,0]
+    4: [1,0,0,0]
+    5: [0,0,1,1]
+    6: [0,1,0,1]
+    7: [0,1,1,0]
+    8: [1,0,0,1]
+    9: [1,0,1,0]
+    10: [1,1,0,0]
+    11: [0,1,1,1]
+    12: [1,0,1,1]
+    13: [1,1,0,1]
+    14: [1,1,1,0]
+    15: [1,1,1,1]
+    
 Possible Reward Outcomes:
     0: 0*r --> nobody captures
     1: 1*r --> one predator captures
     2: 2*r --> two predators capture
     3: 3*r --> three predators capture
+    4: 4*r --> four predators capture
 '''
 
 # hard-coded way to assign index to reward vector --> could be cleaner
 def vec_to_idx(vec):
-    if np.array_equal(vec, np.zeros(3)):
+    if np.array_equal(vec, np.zeros(4)):
         return 0
-    elif np.array_equal(vec, np.array([0, 0, 1])):
+    elif np.array_equal(vec, np.array([0,0,0,1])):
         return 1
-    elif np.array_equal(vec, np.array([0, 1, 0])):
+    elif np.array_equal(vec, np.array([0,0,1,0])):
         return 2
-    elif np.array_equal(vec, np.array([1, 0, 0])):
+    elif np.array_equal(vec, np.array([0,1,0,0])):
         return 3
-    elif np.array_equal(vec, np.array([0, 1, 1])):
+    elif np.array_equal(vec, np.array([1,0,0,0])):
         return 4
-    elif np.array_equal(vec, np.array([1, 0, 1])):
+    elif np.array_equal(vec, np.array([0,0,1,1])):
         return 5
-    elif np.array_equal(vec, np.array([1, 1, 0])):
+    elif np.array_equal(vec, np.array([0,1,0,1])):
         return 6
-    elif np.array_equal(vec, np.ones(3)):
+    elif np.array_equal(vec, np.array([0,1,1,0])):
         return 7
+    elif np.array_equal(vec, np.array([1,0,0,1])):
+        return 8
+    elif np.array_equal(vec, np.array([1,0,1,0])):
+        return 9
+    elif np.array_equal(vec, np.array([1,1,0,0])):
+        return 10
+    elif np.array_equal(vec, np.array([0,1,1,1])):
+        return 11
+    elif np.array_equal(vec, np.array([1,0,1,1])):
+        return 12
+    elif np.array_equal(vec, np.array([1,1,0,1])):
+        return 13
+    elif np.array_equal(vec, np.array([1,1,1,0])):
+        return 14
+    elif np.array_equal(vec, np.ones(4)):
+        return 15
     else:
         raise ValueError('Incorrect reward vector!')
 
 def idx_to_vec(idx):
     if idx == 0:
-        return '[0, 0, 0]'
+        return '[0, 0, 0, 0]'
     elif idx == 1:
-        return '[0, 0, r]'
+        return '[0, 0, 0, r]'
     elif idx == 2:
-        return '[0, r, 0]'
+        return '[0, 0, r, 0]'
     elif idx == 3:
-        return '[r, 0, 0]'
+        return '[0, r, 0, 0]'
     elif idx == 4:
-        return '[0, r, r]'
+        return '[r, 0, 0, 0]'
     elif idx == 5:
-        return '[r, 0, r]'
+        return '[0, 0, r, r]'
     elif idx == 6:
-        return '[r, r, 0]'
+        return '[0, r, 0, r]'
     elif idx == 7:
-        return '[r, r, r]'
+        return '[0, r, r, 0]'
+    elif idx == 8:
+        return '[r, 0, 0, r]'
+    elif idx == 9:
+        return '[r, 0, r, 0]'
+    elif idx == 10:
+        return '[r, r, 0, 0]'
+    elif idx == 11:
+        return '[0, r, r, r]'
+    elif idx == 12:
+        return '[r, 0, r, r]'
+    elif idx == 13:
+        return '[r, r, 0, r]'
+    elif idx == 14:
+        return '[r, r, r, 0]'
+    elif idx == 15:
+        return '[r, r, r, r]'
     else:
         raise ValueError('Incorrect reward index!')
     
@@ -202,6 +243,8 @@ def compute_results(path, steps = STEPS):
         'reward_sums' : sum_outcomes
     }
 
+    # print(vec_outcomes)
+
     # compute joint
     joint = compute_joint(rewards)
 
@@ -219,10 +262,11 @@ def compute_results(path, steps = STEPS):
 
     # compare to uniform conditional entropy
     uniform_conditionals = {
-        'P(R|A=0)' : [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        'P(R|A=1)' : [0.0, 1/3, 1/3, 1/3, 0.0, 0.0, 0.0, 0.0],
-        'P(R|A=2)' : [0.0, 0.0, 0.0, 0.0, 1/3, 1/3, 1/3, 0.0],
-        'P(R|A=3)' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        'P(R|A=0)' : [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        'P(R|A=1)' : [0.0, 1/4, 1/4, 1/4, 1.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        'P(R|A=2)' : [0.0, 0.0, 0.0, 0.0, 0.0, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 0.0, 0.0, 0.0, 0.0, 0.0],
+        'P(R|A=3)' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1/4, 1/4, 1/4, 1/4, 0.0],
+        'P(R|A=4)' : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
     }
     h_uniform = compute_conditional_entropy(uniform_conditionals, sum_marginals)
     i_ra = h_uniform - h_cond
@@ -260,7 +304,7 @@ def main(config):
     # info: distribution difference
 
     try:
-        os.makedirs("plots")
+        os.makedirs("plots4")
     except FileExistsError:
         # directory already exists
         pass
@@ -272,10 +316,10 @@ def main(config):
     
         x_pos = TEST_VELS
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_no_collab_no_equivar_vel_') 
         individual = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
         
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_') 
         shared = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
         bar_width = 0.04
 
@@ -290,20 +334,20 @@ def main(config):
         plt.title('Mutual vs Individual Reward (Capture Success)', weight="bold")
         plt.legend(loc="upper right")
 
-        plt.savefig('plots/fig1.png')
+        plt.savefig('plots4/fig1.png')
         print("Done")
     
 
     if config.plot == 2 or config.plot == 0:
         print("Making plot 2...")
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_1.1.pkl')
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_1.1.pkl')
         rewards, results = compute_results(path)
             
         #No Eq
-        fig = plt.figure()
-        x_pos = [i for i in range(8)]
-        vals = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(8)]
+        fig = plt.figure(figsize=(17,5))
+        x_pos = [i for i in range(16)]
+        vals = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(16)]
 
         bar_width = 0.4
 
@@ -312,17 +356,17 @@ def main(config):
         plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
         plt.ylabel('P(r)', weight="bold")
         plt.title('No Equivariance', weight="bold")
-        plt.savefig('plots/distrib_no_eq.png')
+        plt.savefig('plots4/distrib_no_eq.png')
 
 
 
         # Eq
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_1.1.pkl')
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_1.1.pkl')
         rewards, results = compute_results(path)
 
-        fig = plt.figure()
-        x_pos = [i for i in range(8)]
-        vals2 = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(8)]
+        fig = plt.figure(figsize=(17,5))
+        x_pos = [i for i in range(16)]
+        vals2 = [rewards['reward_vectors'].count(i) / len(rewards['reward_vectors']) for i in range(16)]
         bar_width = 0.4
 
         
@@ -330,10 +374,10 @@ def main(config):
         plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
         plt.ylabel('P(r)', weight="bold")
         plt.title('Fair-E', weight="bold")
-        plt.savefig('plots/distrib_eq.png')
+        plt.savefig('plots4/distrib_eq.png')
 
 
-        fig = plt.figure()
+        fig = plt.figure(figsize=(17,8))
         ax1 = fig.add_subplot(2,1,1)
         ax1.bar(x_pos, vals, bar_width, color='g')
         plt.xticks(x_pos, [idx_to_vec(x) for x in x_pos] )
@@ -353,7 +397,7 @@ def main(config):
                     hspace=0.8)
 
         # Save the full figure...
-        fig.savefig('plots/fig2.png')
+        fig.savefig('plots4/fig2.png')
         print("Done")
 
 
@@ -365,21 +409,21 @@ def main(config):
         fig = plt.figure()
         x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_') 
         one = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'greedy_vel_') 
-        two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+        # path = os.path.join(config.fp, 'greedy_vel_') 
+        # two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_no_collab_no_equivar_vel_') 
         three = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_') 
         four = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
         
 
         plt.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
-        plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+        # plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
         plt.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
         plt.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
 
@@ -389,24 +433,24 @@ def main(config):
         plt.ylabel('I(R,Z)', weight="bold")
         plt.title('Team Fairness', weight="bold")
         plt.legend()
-        plt.savefig('plots/fairness.png')
+        plt.savefig('plots4/fairness.png')
 
         #UTIL
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_') 
         one = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'greedy_vel_') 
-        two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+        # path = os.path.join(config.fp, 'greedy_vel_') 
+        # two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_no_collab_no_equivar_vel_') 
         three = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_') 
         four = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
         fig = plt.figure()
         plt.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
-        plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+        # plt.plot(x_pos, two, ls='--', marker='.', label='Greedy')
         plt.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
         plt.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
         
@@ -416,7 +460,7 @@ def main(config):
         plt.ylabel('Capture Success %', weight="bold")
         plt.title('Team Utility', weight="bold")
         plt.legend()
-        plt.savefig('plots/utility.png')
+        plt.savefig('plots4/utility.png')
 
 
 
@@ -426,21 +470,21 @@ def main(config):
         ax1 = fig.add_subplot(1,2,1)
         x_pos = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
         
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_') 
         one = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'greedy_vel_') 
-        two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
+        # path = os.path.join(config.fp, 'greedy_vel_') 
+        # two = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_no_collab_no_equivar_vel_') 
         three = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_') 
         four = [compute_results(path + str(x) + '.pkl')[1]['info'] for x in x_pos]
         
 
         ax1.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
-        ax1.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+        # ax1.plot(x_pos, two, ls='--', marker='.', label='Greedy')
         ax1.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
         ax1.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
 
@@ -452,20 +496,20 @@ def main(config):
         plt.legend()
 
         ax2 = fig.add_subplot(1,2,2)
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_no_equivar_vel_') 
         one = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'greedy_vel_') 
-        two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
+        # path = os.path.join(config.fp, 'greedy_vel_') 
+        # two = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_no_collab_no_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_no_collab_no_equivar_vel_') 
         three = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_') 
         four = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in x_pos]
 
         ax2.plot(x_pos, one, ls='--', marker='+', label='No Equivariance')
-        ax2.plot(x_pos, two, ls='--', marker='.', label='Greedy')
+        # ax2.plot(x_pos, two, ls='--', marker='.', label='Greedy')
         ax2.plot(x_pos, three, ls='--', marker='o', label='Individual Reward')
         ax2.plot(x_pos, four, ls='--', marker='*', label='Fair-E')
 
@@ -476,7 +520,7 @@ def main(config):
         plt.title('Team Utility', weight="bold")
         plt.legend()
 
-        fig.savefig('plots/fig3.png')
+        fig.savefig('plots4/fig3.png')
         print("Done")
 
     
@@ -489,9 +533,9 @@ def main(config):
 
         fig = plt.figure()
 
-        path = os.path.join(config.fp, 'ddpg_symmetric_collab_equivar_vel_') 
-        points = [compute_results(path + str(x) + '.pkl', 167)[1]['capture_success'] for x in vels]
-        # points = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in vels]
+        path = os.path.join(config.fp, 'ddpg_4_agents_collab_equivar_vel_') 
+        # points = [compute_results(path + str(x) + '.pkl', 167)[1]['capture_success'] for x in vels]
+        points = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in vels]
 
         plt.plot(vels ,points, linewidth=4.0, c='k')
 
@@ -499,9 +543,9 @@ def main(config):
         colors = [palette(i) for i in np.arange(len(LAMDAS2))]
         patches = [mpatches.Patch(color="k", label='Fair-E')]
         for i,l in enumerate(LAMDAS2):
-            path = os.path.join(config.fp, 'ddpg_fair_collab_lambda_' + str(l) + '_vel_')
-            points = [compute_results(path + str(x) + '.pkl', 167)[1]['capture_success'] for x in vels]
-            # points = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in vels]
+            path = os.path.join(config.fp, 'ddpg_4_agents_collab_lambda_' + str(l) + '_vel_')
+            # points = [compute_results(path + str(x) + '.pkl', 167)[1]['capture_success'] for x in vels]
+            points = [compute_results(path + str(x) + '.pkl')[1]['capture_success'] for x in vels]
 
             plt.plot(vels ,points, c=colors[i], linewidth=2.0)
         
@@ -514,7 +558,7 @@ def main(config):
         plt.title('Fair-ER Train Performance (Capture Success)', weight="bold")
         plt.legend(handles=patches)
 
-        fig.savefig('plots/fig4.png')
+        fig.savefig('plots4/fig4.png')
         print("Done")
 
 
@@ -540,7 +584,7 @@ def main(config):
             info_ys = []
             success_ys = []
             for x in LAMDAS2:
-                path = os.path.join(config.fp, 'ddpg_fair_collab_lambda_' + str(x) + '_vel_' + str(val) + '.pkl')
+                path = os.path.join(config.fp, 'ddpg_4_agents_collab_lambda_' + str(x) + '_vel_' + str(val) + '.pkl')
                 rewards, results = compute_results(path)
 
                 info_ys.append(results['info'])
@@ -586,7 +630,7 @@ def main(config):
 
 
 
-        plt.savefig('plots/fig5.png')
+        plt.savefig('plots4/fig5.png')
         print("Done")
 
 
