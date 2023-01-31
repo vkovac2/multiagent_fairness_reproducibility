@@ -173,7 +173,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=612, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
     parser.add_argument('--collaborative', type=bool, default = True)
-    parser.add_argument('--equivariant', type=bool, default=True)
+    parser.add_argument('--equivariant', action='store_true')
     parser.add_argument('--num_landmarks', type = int, default=2)
     parser.add_argument('--nb_agents', type=int, default=3)
     parser.add_argument('--nb_prey', type=int, default=1)
