@@ -70,7 +70,6 @@ class Trajectory_Collector():
                         self.predators.append(Copy_DDPG_Agent(env, config, self.reference_agent, i))
                     
                     self.predators[-1].load_params(params)
-                    print(self.predators[-1])
             else:
                 raise ValueError('Path to checkpoint must be provided to test policy!')
         else:
