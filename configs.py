@@ -37,9 +37,10 @@ class BaseConfig(object):
     use_curriculum = True                       # curriculum learning flag
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
-    warmup_episodes = 333                       # number of experience episodes before training begins
-    checkpoint_interval = 1000                  # episodes between model checkpoints
+    warmup_episodes = 333               # number of experience episodes before training begins
+    checkpoint_interval = 2000                  # episodes between model checkpoints
     num_landmarks = 0
+
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
 
@@ -63,7 +64,8 @@ class Config_DDPG_Symmetric(BaseConfig):
     epsilon_end = 0.05                          # epsilon end for e-greedy policy
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
-
+    nb_agents = 3
+    nb_prey = 1
     # inherited from other configs
     use_sensor_range = True                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication
@@ -84,7 +86,8 @@ class Config_DDPG_Speed_Fair(BaseConfig):
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
     lambda_coeff = 0.0                          # strength of fairness constraint
-
+    nb_agents = 3
+    nb_prey = 1
     # inherited from other configs
     use_sensor_range = False                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication

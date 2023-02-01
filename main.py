@@ -54,13 +54,14 @@ if __name__ == '__main__':
     parser.add_argument('--log_interval', type=int, default=None, help='training logs update interval')
     parser.add_argument('--n_threads', type=int, default=None, help='number of threads for trajectory rollouts')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
-    parser.add_argument('--collaborative', type=bool, default = True)
+    parser.add_argument('--collaborative', action='store_true')
     parser.add_argument('--world_size', type=float, default = 2.0)
     parser.add_argument('--lambda_coeff', type=float, default = 0.5)
     parser.add_argument('--decay', type=int, default=5000)
-    parser.add_argument('--equivariant', type=bool, default=True)
+    parser.add_argument('--equivariant', action='store_true')
     parser.add_argument('--test_predator', type=str, default="greedy")
-
+    parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()

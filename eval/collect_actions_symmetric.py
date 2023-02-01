@@ -31,6 +31,7 @@ class Trajectory_Collector():
         self.discrete = False
         self.pred_policy = config.pred_policy
         self.pred_vel = config.pred_vel
+        self.num_prey = config.nb_prey
 
         # environment properties
         self.directory = config.directory
@@ -81,7 +82,7 @@ class Trajectory_Collector():
         self.agents = self.predators + self.prey
 
         self.agent_keys = ['p{}'.format(i+1) for i in range(self.env.num_preds)]
-        self.agent_keys.append('prey')
+        self.agent_keys.extend(['prey{}'.format(j+1) for j in range(self.env.num_prey)])
 
         assert len(self.agents) == self.num_agents
 
@@ -170,9 +171,11 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
     parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--collaborative', type=bool, default = False)
-    parser.add_argument('--equivariant', type=bool, default=False)
+    parser.add_argument('--collaborative', action='store_true')
+    parser.add_argument('--equivariant', action='store_true')
     parser.add_argument('--num_landmarks', type = int, default=0)
+    parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
@@ -191,6 +194,8 @@ if __name__ == '__main__':
     config.checkpoint_epoch = args.checkpoint_epoch
     config.equivariant = args.equivariant
     config.collaborative = args.collaborative
+    config.nb_agents = args.nb_agents
+    config.nb_prey = args.nb_prey
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
