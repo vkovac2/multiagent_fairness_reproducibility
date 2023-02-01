@@ -238,6 +238,8 @@ videos/
 data/
 results/
 results_no/
+results_old/
+results_new/
 v2/
 models/
 hacking/

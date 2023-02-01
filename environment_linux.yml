@@ -23,6 +23,7 @@ dependencies:
   - torchvision=0.14.1
   - tqdm=4.64.1
   - conda-forge::pyglet=1.5.27
+  - seaborn
   - pip:
     - gym==0.10.5
     - numpy-stl==3.0.0
