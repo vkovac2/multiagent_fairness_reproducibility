@@ -182,7 +182,7 @@ if __name__ == '__main__':
     parser.add_argument('--collaborative', action='store_true')
     parser.add_argument('--equivariant', action='store_true')
     parser.add_argument('--num_landmarks', type = int, default=0)
-    parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_pred', type=int, default=3)
     parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
     config.collaborative = args.collaborative
-    config.nb_agents = args.nb_agents
+    config.nb_agents = args.nb_pred
     config.nb_prey = args.nb_prey
     # config.mode = 'train'
     config.render = args.render
