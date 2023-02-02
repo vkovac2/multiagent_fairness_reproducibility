@@ -6,7 +6,7 @@ This repository is the official implementation of Fairness for Cooperative Multi
 
 To clone the repository with the simple_particle_envs submodule:
 ```
-git clone --recurse-submodules https://github.com/gerardPlanella/multiagent_fairness_reproducibility.git
+git clone --recurse-submodules <link_to_repository>
 ```
 
 ## Setup
