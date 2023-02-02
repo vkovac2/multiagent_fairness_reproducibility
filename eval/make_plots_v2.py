@@ -25,7 +25,7 @@ WORLD_SIZE = 2.0
 PRED_SIZE = 0.075
 PREY_SIZE = 0.05
 
-STEPS = 500
+STEPS = 167
 
 
 
@@ -166,7 +166,7 @@ def idx_to_vec(idx):
 def compute_results(path, steps = STEPS):
     if not os.path.exists(path):
         print("File path " + path + " does not exist!")    
-        return
+        exit()
 
     file = open(path, "rb")
     trajectories = pickle.load(file)

@@ -1,6 +1,6 @@
 # Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study
 
-This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility STudy.
+This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study.
 
 ## Cloning the repository
 
@@ -90,5 +90,10 @@ python eval/collect_actions_symmetric.py --env simple_torus_modulate --pred_poli
 
 To create the plots, run:
 ```eval
-python eval/make_plots.py #TODO Orestis fix script
+python eval/make_plots.py --fp path/of/trajectories --plot (1-5)
+```
+
+```
+for 4 agents:
+python eval/make_plots_4_predators.py --fp path/of/trajectories --plot (1-3)
 ```

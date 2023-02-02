@@ -242,6 +242,8 @@ results_old/
 results_new/
 v2/
 models/
+final_models/
+results_final/
 hacking/
 .vscode/
 .DS_Store
