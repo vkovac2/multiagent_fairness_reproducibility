@@ -164,7 +164,7 @@ if __name__ == '__main__':
     parser.add_argument('--pred_policy', default='random', help='Predator strategy.')
     parser.add_argument('--prey_policy', default='noop', help='Prey strategy.')
     parser.add_argument('--pred_vel', type=float, default=1.0, help='predator velocity.')
-    parser.add_argument('--n_steps', type=int, default=500, help='number of steps to run per epoch')
+    parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
     parser.add_argument('--n_epochs', type=int, default=100, help='number of training epochs')
     parser.add_argument('--directory', type=str, default='results/500/no_collab_no_equivar', help='path to save')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to load checkpoint from')

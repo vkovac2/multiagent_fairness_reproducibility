@@ -206,8 +206,9 @@ def idx_to_vec(idx):
     
 def compute_results(path, steps = STEPS):
     if not os.path.exists(path):
-        print("File path " + path + " does not exist!")    
-        return
+        print("File path " + path + " does not exist!")
+        exit()    
+        # return
 
     file = open(path, "rb")
     trajectories = pickle.load(file)
@@ -281,13 +282,6 @@ def compute_results(path, steps = STEPS):
 
 
 TEST_VELS = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1]
-# TEST_VELS = [1.2, 1.1, 1.0, 0.9, 0.7, 0.6, 0.5]
-INVALID_STRATS = ['lambda_0.4', 'lambda_0.7']
-
-STRATS = [ "ddpg_symmetric", "ddpg_fair", "greedy"]
-COLLABS = [ "collab", "no_collab"]
-EQUIVARS = [ "equivar", "no_equivar"]
-LAMDAS = [0.0, 0.1, 0.2, 0.3, 0.5, 0.8, 0.9, 0.99999]
 
 def main(config):
 
