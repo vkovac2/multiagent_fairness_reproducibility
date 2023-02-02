@@ -1,0 +1,33 @@
+name: multiagent_env
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - matplotlib=3.6.2
+  - matplotlib-base=3.6.2
+  - numpy=1.22.3
+  - numpy-base=1.22.3
+  - pillow=9.3.0
+  - pip=22.3.1
+  - python=3.9.15
+  - python-dateutil=2.8.2
+  - pytorch=1.13.1
+  - scipy=1.7.3
+  - six=1.16.0
+  - tensorboard=2.10.0
+  - tensorboard-data-server=0.6.1
+  - tensorboard-plugin-wit=1.8.1
+  - torchaudio=0.13.1
+  - torchvision=0.14.1
+  - tqdm=4.64.1
+  - conda-forge::pyglet=1.5.27
+  - seaborn
+  - pip:
+    - gym==0.10.5
+    - numpy-stl==3.0.0
+    - protobuf==3.19.6
+    - python-utils==3.4.5
+    - torch-tb-profiler==0.4.1
+prefix: C:\Users\gerar_0ev1q4m\miniconda3\envs\fact_v2

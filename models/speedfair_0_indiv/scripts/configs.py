@@ -37,16 +37,15 @@ class BaseConfig(object):
     use_curriculum = True                       # curriculum learning flag
     normalize = False                           # normalize inputs
     norm_obs_var_clip = 1e-6                    # threshold to clip obs variance 
-    warmup_episodes = 333               # number of experience episodes before training begins
-    checkpoint_interval = 2000                  # episodes between model checkpoints
-    num_landmarks = 0
+    warmup_episodes = 333                       # number of experience episodes before training begins
+    checkpoint_interval = 2000               # episodes between model checkpoints
 
     ######## testing #########
     n_epochs_test = 100                         # number of test epochs
 
     ######## book-keeping ########
     log_interval = 50                           # episodes between log updates
-    checkpoint_path = None                      # path for loading model checkpoints
+    checkpoint_path = None                     # path for loading model checkpoints
     scripts = ['main.py', 'configs.py']
 
     def show(self):
@@ -57,15 +56,14 @@ class BaseConfig(object):
 class Config_DDPG_Symmetric(BaseConfig):
     algorithm = 'ddpg_symmetric'                # algorithm name
     pred_vel_start = 0.5                       # curriculum start value
-    pred_vel_end = 1.2                        # curriculum end value
+    pred_vel_end = 1.2                          # curriculum end value
     decay = 5000                           # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
     epsilon_end = 0.05                          # epsilon end for e-greedy policy
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
-    nb_pred = 3
-    nb_prey = 1
+
     # inherited from other configs
     use_sensor_range = True                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication
@@ -77,8 +75,8 @@ class Config_DDPG_Symmetric(BaseConfig):
 
 class Config_DDPG_Speed_Fair(BaseConfig):
     algorithm = 'ddpg_speed_fair'               # algorithm name
-    pred_vel_start = 1.2                        # curriculum start value
-    pred_vel_end = 0.5                          # curriculum end value
+    pred_vel_start = 0.5                        # curriculum start value
+    pred_vel_end = 1.2                          # curriculum end value
     decay = 5000                               # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
@@ -86,8 +84,7 @@ class Config_DDPG_Speed_Fair(BaseConfig):
     test_prey = 'cosine'                        # bot policy to use for prey
     test_predator = 'greedy'                    # bot policy to use for predators
     lambda_coeff = 0.0                          # strength of fairness constraint
-    nb_pred = 3
-    nb_prey = 1
+
     # inherited from other configs
     use_sensor_range = False                    # predators have sensing range
     comm_type = 'none'                          # predators have perfect communication

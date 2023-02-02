@@ -18,7 +18,7 @@ sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from algorithms.algo_utils import *
 from baselines.bot_policies import *
-from configs import Config_DDPG_Speed_Fair
+from configs import Config_DDPG_Symmetric
 
 class Trajectory_Collector():
     def __init__(self, env, config):
@@ -31,6 +31,7 @@ class Trajectory_Collector():
         self.discrete = False
         self.pred_policy = config.pred_policy
         self.pred_vel = config.pred_vel
+        self.num_prey = config.nb_prey
 
         # environment properties
         self.directory = config.directory
@@ -45,48 +46,39 @@ class Trajectory_Collector():
 
         # init predators
         if self.pred_policy == 'ddpg':
-            from algorithms.ddpg_speed_fair import DDPG_Agent
-            #from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
-            self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
-            #self.predators = [Symmetric_DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
-
+            from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent, Copy_DDPG_Agent
+            # self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            #self.predators = [DDPG_Agent(env, config, self.writer, i) for i in range(self.env.num_preds)]
+            self.predators = []
+            self.reference_agent = None
             if self.checkpoint_path:
-                print('loading warm-up model!')
-                # init predators from checkpoint
-                for i, a in enumerate(self.predators):
+                for i in range(self.env.num_preds):
+                    print('loading warm-up model!')
+                    # init predators from checkpoint   
                     if self.config.checkpoint_epoch:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
+                        print(params.keys())
                     else:
                         params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
-
-                    self.predators[i].load_params(params)
+                        print(params.keys())
+                        
+                    if "critic" in params.keys():
+                        self.predators.append(Symmetric_DDPG_Agent(env, config, self.writer, i))
+                        self.reference_agent = self.predators[-1]
+                    else:
+                        assert self.reference_agent is not None
+                        self.predators.append(Copy_DDPG_Agent(env, config, self.reference_agent, i))
+                    
+                    self.predators[-1].load_params(params)
             else:
                 raise ValueError('Path to checkpoint must be provided to test policy!')
         else:
             self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
         self.num_preds = len(self.predators)
        
-            # if self.checkpoint_path:
-            #         print('loading warm-up model!')
-            #         # init predators from checkpoint
-            #         for i, a in enumerate(self.predators):
-            #             if self.config.checkpoint_epoch:
-            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i), epoch=self.config.checkpoint_epoch)
-            #                 print(params.keys())
-            #             else:
-            #                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
-            #                 print(params.keys())
-            #             self.predators[i].load_params(params)
-            #     else:
-            #         raise ValueError('Path to checkpoint must be provided to test policy!')
-            # else:
-            #     self.predators = [decentralized_predator(self.env, i, config.pred_policy, False) for i in range(self.env.num_preds)]
-            # self.num_preds = len(self.predators)
-
         # init prey as DDPG
         self.prey = [decentralized_prey(self.env, i+len(self.predators), config.prey_policy, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
-
         self.agents = self.predators + self.prey
 
         self.agent_keys = ['p{}'.format(i+1) for i in range(self.env.num_preds)]
@@ -171,10 +163,10 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default='simple_torus')
     parser.add_argument('--pred_policy', default='random', help='Predator strategy.')
     parser.add_argument('--prey_policy', default='noop', help='Prey strategy.')
-    parser.add_argument('--pred_vel', type=float, default=1.1, help='predator velocity.')
+    parser.add_argument('--pred_vel', type=float, default=1.0, help='predator velocity.')
     parser.add_argument('--n_steps', type=int, default=167, help='number of steps to run per epoch')
     parser.add_argument('--n_epochs', type=int, default=100, help='number of training epochs')
-    parser.add_argument('--directory', type=str, default='results/stored_trajectories/no_equivariance', help='path to save')
+    parser.add_argument('--directory', type=str, default='results/stored_trajectories/', help='path to save')
     parser.add_argument('--checkpoint_path', type=str, default=None, help='path to load checkpoint from')
     parser.add_argument('--checkpoint_epoch', type=int, default=None, help='checkpoint epoch')
     parser.add_argument('--seed', type=int, default=72, help='checkpoint epoch')
@@ -189,8 +181,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # hacky way to get configs to work for trained models
-    # config = Config_DDPG_Symmetric()
-    config = Config_DDPG_Speed_Fair()
+    from algorithms.ddpg_symmetric import Symmetric_DDPG_Agent
+    config = Config_DDPG_Symmetric()
     config.env = args.env
     config.pred_policy = args.pred_policy
     config.prey_policy = args.prey_policy
@@ -200,12 +192,16 @@ if __name__ == '__main__':
     config.directory = args.directory
     config.checkpoint_path = args.checkpoint_path
     config.checkpoint_epoch = args.checkpoint_epoch
+    config.equivariant = args.equivariant
     config.collaborative = args.collaborative
-    config.nb_agents = args.nb_pred
+    config.nb_pred = args.nb_pred
     config.nb_prey = args.nb_prey
     # config.mode = 'train'
     config.render = args.render
     config.num_landmarks = args.num_landmarks
+
+    print("Equivariant: " + str(config.equivariant))
+    print("Pred Vel: " + str(config.pred_vel))
 
     comm_envs = []
     if config.env in comm_envs:

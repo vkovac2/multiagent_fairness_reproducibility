@@ -104,12 +104,12 @@ class Symmetric_DDPG_Agent(object):
             state_batch = self.normalize_obs(torch.FloatTensor(state_batch).to(device))
             next_state_batch = self.normalize_obs(torch.FloatTensor(next_state_batch).to(device))
         else:
-            state_batch = torch.FloatTensor(state_batch).to(device)
-            next_state_batch = torch.FloatTensor(next_state_batch).to(device)
+            state_batch = torch.FloatTensor(np.array(state_batch)).to(device)
+            next_state_batch = torch.FloatTensor(np.array(next_state_batch)).to(device)
 
-        action_batch = torch.FloatTensor(action_batch).to(device)
-        reward_batch = torch.FloatTensor(reward_batch).to(device)
-        done_batch = torch.FloatTensor(done_batch).to(device)
+        action_batch = torch.FloatTensor(np.array(action_batch)).to(device)
+        reward_batch = torch.FloatTensor(np.array(reward_batch)).to(device)
+        done_batch = torch.FloatTensor(np.array(done_batch)).to(device)
    
         # Q(s, a)
         curr_Q = self.critic(state_batch, action_batch)
@@ -191,7 +191,7 @@ class Copy_DDPG_Agent(object):
         self.env = env
         self.index = index
         self.learning_agent = True
-        self.copy_agent = False
+        self.copy_agent = True
         # action space depends on problem
         if config.comm_env:
             self.action_space = self.env.action_space[self.index].spaces[0]
@@ -208,9 +208,8 @@ class Copy_DDPG_Agent(object):
 
         # init actor
         self.actor = Actor(self.observation_space, config.actor_hidden, self.action_space.shape[0]).to(device)
-
-        # copy params from reference actor
-        param_update_hard(self.actor, self.reference.actor)
+         # copy params from reference actor
+        param_update_hard(self.actor, self.reference.actor.to(device))
 
         # running stats, replay buffer and random process
         if self.normalize:
@@ -246,7 +245,7 @@ class Copy_DDPG_Agent(object):
 
         return action
 
-    def update_policy(self, epoch, reference_pred):
+    def update_policy(self, epoch):
         if epoch <= self.warmup_episodes:
             return
 
@@ -268,7 +267,7 @@ class Copy_DDPG_Agent(object):
 
     def get_params(self):
         return {
-            'actor' : self.actor.state_dict(),
+            'actor' : self.actor.state_dict()
         }
 
     def load_params(self, params):
@@ -296,6 +295,11 @@ class DDPG_Runner():
         self.pred_vel_end = config.pred_vel_end
         self.decay = config.decay
         self.pred_test_vel = config.pred_test_vel
+        self.equivariant = config.equivariant
+
+        self.epoch_start = 1
+
+        print("Equivariant: " + str(self.equivariant))
 
         print('curriculum = {}'.format(self.use_curriculum))
 
@@ -315,30 +319,48 @@ class DDPG_Runner():
         self.writer = SummaryWriter(log_dir=os.path.join('/'.join(split_dir[:-1]), 
                                 'runs', split_dir[-1]))
 
-        # init predators -- forced symmetric agents
-        sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
-        self.predators = [sym_pred]
-        for i in range(self.env.num_preds - 1):
-            self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
+        # init predators
+        if(self.equivariant):
+            sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=0)
+            self.predators = [sym_pred]
+            
+            for i in range(self.env.num_preds - 1):
+                self.predators.append(Copy_DDPG_Agent(env, config, sym_pred, i+1))
+        else:
+            self.predators = []
+            for i in range(self.env.num_preds):
+                sym_pred = Symmetric_DDPG_Agent(env, config, self.writer, index=i)
+                self.predators.append(sym_pred)
+
+
         self.num_preds = len(self.predators)
 
-        if config.mode is 'train' and self.checkpoint_path:
+        if config.mode == 'train' and self.checkpoint_path:
             print('loading warm-up model!')
             # init predators from checkpoint
             for i, a in enumerate(self.predators):
                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
                 self.predators[i].load_params(params)
 
+                #starting epoch
+                path = os.path.join(self.checkpoint_path, 'checkpoints', 'agent_{}'.format(i))
+                files = os.listdir(path)
+                f_name = natural_sort(files)[-1]
+                epochs = re.findall(r'\d+', f_name)
+                self.epoch_start = int(epochs[0]) + 1
+
         # init prey as bots
         self.prey = [decentralized_prey(env, i+len(self.predators), config.test_prey, False) for i in range(self.env.num_prey)]
         self.num_prey = len(self.prey)
         self.agents = self.predators + self.prey
+
+        
         self.is_training = True
 
         # set start speed
         for i, a in enumerate(self.env.world.agents):
             if i < self.num_preds:
-                a.max_speed = self.pred_vel_start if config.mode is 'train' else self.pred_test_vel
+                a.max_speed = self.pred_vel_start if config.mode == 'train' else self.pred_test_vel
 
     def sample_actions(self, obs_n, epoch):
         actions, action_vecs = [], []
@@ -369,8 +391,13 @@ class DDPG_Runner():
         train_steps = 0
         total_caps = 0
         successes = 0
+        s_ratio = 0
 
-        for epoch in tqdm(range(1, self.n_epochs+1)):
+        #if starting from checkpoint, set the initial speed
+        if self.epoch_start > 1 and self.use_curriculum:
+            c = self.step_curriculum(self.epoch_start)
+
+        for epoch in tqdm(range(self.epoch_start, self.n_epochs+1)):
             rewards = [0.0 for _ in range(self.num_agents)]
             obs_n = self.env.reset()
             for step in range(1, self.n_steps+1):
@@ -411,7 +438,6 @@ class DDPG_Runner():
                         for k in range(self.num_agents):
                             if self.agents[k].learning_agent:
                                 save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
-                    
                     # logging
                     if epoch % self.log_interval == 0:
                         self.writer.add_scalar('epoch/steps', step, epoch)
@@ -444,6 +470,7 @@ class DDPG_Runner():
                     obs_n = next_obs_n
 
         self.env.close()
+        return s_ratio
 
 
     def test(self, render=True):

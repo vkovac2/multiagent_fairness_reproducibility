@@ -9,6 +9,8 @@ from torch.utils.tensorboard import SummaryWriter
 from multiagent.utils import VideoRecorder
 from tqdm import tqdm
 
+import re
+
 from algorithms.models  import Actor, Critic
 from algorithms.replay import ReplayBuffer
 from algorithms.algo_utils import *
@@ -106,12 +108,12 @@ class DDPG_Agent(object):
             state_batch = self.normalize_obs(torch.FloatTensor(state_batch).to(device))
             next_state_batch = self.normalize_obs(torch.FloatTensor(next_state_batch).to(device))
         else:
-            state_batch = torch.FloatTensor(state_batch).to(device)
-            next_state_batch = torch.FloatTensor(next_state_batch).to(device)
+            state_batch = torch.FloatTensor(np.array(state_batch)).to(device)
+            next_state_batch = torch.FloatTensor(np.array(next_state_batch)).to(device)
 
-        action_batch = torch.FloatTensor(action_batch).to(device)
-        reward_batch = torch.FloatTensor(reward_batch).to(device)
-        done_batch = torch.FloatTensor(done_batch).to(device)
+        action_batch = torch.FloatTensor(np.array(action_batch)).to(device)
+        reward_batch = torch.FloatTensor(np.array(reward_batch)).to(device)
+        done_batch = torch.FloatTensor(np.array(done_batch)).to(device)
    
         # Q(s, a)
         curr_Q = self.critic(state_batch, action_batch)
@@ -227,6 +229,8 @@ class DDPG_Runner():
         self.decay = config.decay
         self.pred_test_vel = config.pred_test_vel
 
+        self.epoch_start = 1
+
         print('curriculum = {}'.format(self.use_curriculum))
 
         # environment properties
@@ -250,6 +254,16 @@ class DDPG_Runner():
             for i, a in enumerate(self.predators):
                 params = load_checkpoint(self.checkpoint_path, 'agent_{}'.format(i))
                 self.predators[i].load_params(params)
+
+                #starting epoch
+                path = os.path.join(self.checkpoint_path, 'checkpoints', 'agent_{}'.format(i))
+                files = os.listdir(path)
+                f_name = natural_sort(files)[-1]
+                epochs = re.findall(r'\d+', f_name)
+                self.epoch_start = int(epochs[0]) + 1
+
+
+
 
         # init prey as bots
         self.prey = [decentralized_prey(env, i+len(self.predators), config.test_prey, False) for i in range(self.env.num_prey)]
@@ -292,7 +306,11 @@ class DDPG_Runner():
         total_caps = 0
         successes = 0
 
-        for epoch in tqdm(range(1, self.n_epochs+1)):
+        #if starting from checkpoint, set the initial speed
+        if self.epoch_start > 1 and self.use_curriculum:
+            c = self.step_curriculum(self.epoch_start)
+
+        for epoch in tqdm(range(self.epoch_start, self.n_epochs+1)):
             rewards = [0.0 for _ in range(self.num_agents)]
             obs_n = self.env.reset()
             for step in range(1, self.n_steps+1):
@@ -309,6 +327,7 @@ class DDPG_Runner():
                 # collect rewards
                 for i in range(self.num_agents):
                     rewards[i] += reward_n[i]
+
 
                 if all(done_n) or step == self.n_steps:
                     done_n = [1 for _ in range(self.num_agents)]
@@ -332,7 +351,6 @@ class DDPG_Runner():
                         for k in range(self.num_agents):
                             if self.agents[k].learning_agent:
                                 save_checkpoint(self.agents[k].get_params(), self.directory, 'agent_{}'.format(k), epoch)
-                    
                     # logging
                     if epoch % self.log_interval == 0:
                         self.writer.add_scalar('epoch/steps', step, epoch)
@@ -360,6 +378,7 @@ class DDPG_Runner():
 
         print('success ratio = {}'.format(s_ratio))
         self.env.close()
+        return s_ratio
 
 
     def test(self, render=True):
