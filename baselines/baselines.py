@@ -179,6 +179,8 @@ if __name__ == '__main__':
     parser.add_argument('--test_noise', type=float, default=0.5, help='test noise')
     parser.add_argument('--init_range_thresh', type=float, default=1.0, help='percentage predators init outside sensing range')
     parser.add_argument('--verbose', dest='verbose', action='store_true')
+    parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_prey', type=int, default=1)
     parser.set_defaults(verbose=False)
     args = parser.parse_args()
 
