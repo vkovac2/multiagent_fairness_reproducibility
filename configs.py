@@ -56,8 +56,8 @@ class BaseConfig(object):
 
 class Config_DDPG_Symmetric(BaseConfig):
     algorithm = 'ddpg_symmetric'                # algorithm name
-    pred_vel_start = 1.2                       # curriculum start value
-    pred_vel_end = 0.5                         # curriculum end value
+    pred_vel_start = 0.5                       # curriculum start value
+    pred_vel_end = 1.2                        # curriculum end value
     decay = 5000                           # number of episodes over curriculum
     pred_test_vel = 0.9                         # predator test speed
     epsilon_start = 0.95                        # epsilon start for e-greedy policy
