@@ -60,7 +60,7 @@ if __name__ == '__main__':
     parser.add_argument('--decay', type=int, default=5000)
     parser.add_argument('--equivariant', action='store_true')
     parser.add_argument('--test_predator', type=str, default="greedy")
-    parser.add_argument('--nb_agents', type=int, default=3)
+    parser.add_argument('--nb_pred', type=int, default=3)
     parser.add_argument('--nb_prey', type=int, default=1)
 
     parser.set_defaults(verbose=False)
