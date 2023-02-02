@@ -176,7 +176,7 @@ def compute_results(path, steps = STEPS):
     vec_outcomes, sum_outcomes = [], []
     num_captures = 0
     for i in range(len(trajectories['positions'])):
-        reward_vec = np.zeros(len(p_keys), dtype=np.int)
+        reward_vec = np.zeros(len(p_keys), dtype=np.int32)
         rew = -50.0
         if len(trajectories['positions'][i][p_keys[0]]) < steps:
             num_captures += 1
