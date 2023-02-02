@@ -57,9 +57,9 @@ To resume training from a checkpoint, run:
 ```
 python main.py --env simple_torus --algorithm ddpg_symmetric --checkpoint_path /path/to/model/checkpoints
 ```
-To train with a varying number of evaders and pursuers we use the simple_torus_modulate.py scenario:
+To train with a varying number of evaders and pursuers we use the simple_torus.py scenario:
 ```
-python main.py --env simple_torus_modulate --algorithm ddpg_symmetric --checkpoint_path /path/to/model/checkpoints --nb_pred 5 --nb_prey 1
+python main.py --env simple_torus --algorithm ddpg_symmetric --nb_agents 5 --nb_prey 1
 ```
 
 
@@ -76,16 +76,15 @@ python eval/collect_actions.py --env simple_torus --pred_policy greedy --prey_po
 ```eval
 python eval/collect_actions_symmetric.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints
 ```
-
 ```
 * CD-DDPG pursuers (Fair-ER) against sophisticated evader: 
 ```eval
 python eval/collect_actions.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints
 ```
 
-To collect trajectories trained with a varying number of evaders and pursuers we use the simple_torus_modulate.py scenario again. For example, with a Fair-E model:
+To collect trajectories trained with a varying number of evaders and pursuers we use the simple_torus scenario again. For example, with a Fair-E model:
 ```
-python eval/collect_actions_symmetric.py --env simple_torus_modulate --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints --nb_pred 5 --nb_prey 1
+python eval/collect_actions_symmetric.py --env simple_torus --pred_policy ddpg --prey_policy cosine --seed 72 --checkpoint_path /path/to/model/checkpoints --nb_agents 5 --nb_prey 1
 ```
 
 To create the plots, run:
