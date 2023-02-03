@@ -1,6 +1,6 @@
 # Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study
 
-This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study.
+This repository is the official implementation of Fairness for Cooperative Multi-Agent Learning with Equivariant Policies Reproducibility Study. Models have been placed in the folder models_evaluation while trajectories have been placed in the folder trajectories_for_plots.
 
 ## Cloning the repository
 
