@@ -25,7 +25,7 @@ WORLD_SIZE = 2.0
 PRED_SIZE = 0.075
 PREY_SIZE = 0.05
 
-STEPS = 167
+STEPS = 500
 
 
 
@@ -588,25 +588,6 @@ def main(config):
 
         plt.savefig('plots/fig5.png')
         print("Done")
-
-
-
-    # sns.set(style="white", font_scale=1.5)
-    # sns.set_context("poster")
-    # sns.set_palette("Greys_r")
-    # plt.rcParams["axes.grid"] = True
-    # sns.lineplot(x=info_ys, y=success_ys, style=True, dashes=[(2,2)]*len(info_ys), markers=False, legend=False)
-    # palette = plt.get_cmap('tab10')
-    # colors = [palette(i) for i in np.arange(len(info_ys))]
-    # plt.scatter(info_ys, success_ys, s=14**2, c=colors, marker='o', edgecolors='black', linewidths=1.2, zorder=10)
-    # plt.errorbar(info_ys, success_ys, yerr=success_y_errs, linestyle="None", ecolor='black', elinewidth=1.5)
-    # plt.ylim(-0.05, 1.1)
-    # plt.xlim(-0.01, np.max(info_ys) + 0.05)
-    # patches = []
-    # for i, k in enumerate(sorted(plot_data[key].keys())):
-    #     patches.append(mpatches.Patch(color=colors[i], label='\u03BB = {}'.format(k.split('_')[-1])))
-    # plt.legend(handles=patches, loc='lower right', prop={'size': 14})
-    # plt.savefig('{}_info_vs_success.png'.format(key))
 
 
 if __name__ == '__main__':
